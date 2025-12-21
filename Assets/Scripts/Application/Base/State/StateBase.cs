@@ -9,7 +9,7 @@ namespace Application.Base
     /// <summary>
     /// 全てのスクリーンの基底クラス
     /// </summary>
-    public abstract class StateBase : IDisposable
+    public abstract class StateBase : IState
     {
         protected readonly IObjectResolver Resolver; 
         
@@ -43,6 +43,11 @@ namespace Application.Base
         /// 実際に派生クラスが初期化するのに必要な初期化メソッド
         /// </summary>
         protected abstract UniTask ConfigureAsync(CancellationToken token);
+
+        /// <summary>
+        /// ステートを抜けるときに呼ばれるメソッド
+        /// </summary>
+        public virtual async UniTask ExitAsync(){}
 
         /// <summary>
         /// 購読処理を共通化

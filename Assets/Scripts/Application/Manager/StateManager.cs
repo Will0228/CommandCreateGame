@@ -17,20 +17,29 @@ namespace Application.StateManager
         /// <summary>
         /// 次のステートに遷移する
         /// </summary>
-        private void SetNextState(StateBase nextState)
+        private async UniTask SetNextStateAsync(StateBase nextState)
         {
+            await _currentState.ExitAsync();
+            
             // 前のステートの購読を消すためにCTSを新しくする
             ResetCancellationTokenSource();
             
             // 前ステートの購読処理などをDisposeする
             _currentState.Dispose();
-            
+            NextStateSettings(nextState);
+        }
+
+        public void SetFirstState(StateBase nextState) => NextStateSettings(nextState);
+
+        private void NextStateSettings(StateBase nextState)
+        {
             // ステート更新
             _currentState = nextState;
+            _currentState.Configure();
             
-            // 次のステートが新しいステートに更新したい場合再度このステートを呼ぶ
+            // 次のステートが新しいステートに更新したい場合再度このメソッドを呼ぶ
             _currentState.TransitionToNextStateAsObservable
-                .Subscribe(SetNextState)
+                .Subscribe(state => SetNextStateAsync(state).Forget())
                 .AddTo(_cts.Token);
         }
 

@@ -20,7 +20,7 @@ namespace Application.Home
         {
         }
 
-        protected override UniTask ConfigureAsync(CancellationToken token)
+        protected override async UniTask ConfigureAsync(CancellationToken token)
         {
             
         }

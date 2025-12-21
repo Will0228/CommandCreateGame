@@ -1,3 +1,12 @@
+using System.Threading;
+using Application.Base;
+using Application.Home;
+using Cysharp.Threading.Tasks;
+using Domain.Addressable;
+using R3;
+using VContainer;
+using VContainer.Unity;
+
 namespace Application.Manager
 {
     /// <summary>
@@ -5,7 +14,51 @@ namespace Application.Manager
     /// </summary>
     public sealed class ScreenManager
     {
-        [Inj]
+        private readonly IAddressableAssetLoader _assetLoader;
+        private readonly StateManager.StateManager _stateManager;
+        
+        private IScreen _currentScreen;
+        private CancellationTokenSource _cts = new();
+
+        [Inject]
+        public ScreenManager(IObjectResolver resolver)
+        {
+            _assetLoader = resolver.Resolve<IAddressableAssetLoader>();
+            _stateManager = resolver.Resolve<StateManager.StateManager>();
+        }
+        
+        public async UniTaskVoid SetNextScreenAsync(IScreen nextScreen)
+        {
+            ResetCancellationTokenSource();
+            
+            _currentScreen.Dispose();
+            
+            NextScreenSettingsAsync(nextScreen).Forget();
+        }
+
+        public async UniTaskVoid SetFirstScreenAsync(IScreen nextScreen) => NextScreenSettingsAsync(nextScreen).Forget();
+
+        private async UniTask NextScreenSettingsAsync(IScreen nextScreen)
+        {
+            _currentScreen = nextScreen;
+            // 次のシーンを作成
+            var screenEntity = await _assetLoader.InstantiateAssetAsync(_currentScreen.AddressKey);
+            var scope = (LifetimeScope)screenEntity.AddComponent(nextScreen.LifetimeScopeType);
+            _currentScreen.SetLifetimeContainer(scope.Container);
+            
+            _currentScreen.NextScreenTransition
+                .Subscribe(screen => SetNextScreenAsync(screen).Forget())
+                .AddTo(_cts.Token);
+            
+            _stateManager.SetFirstState(_currentScreen.Resolver.Resolve(_currentScreen.FirstTransitionStateType) as StateBase);
+        }
+        
+        private void ResetCancellationTokenSource()
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = new();
+        }
     }
 }
 
