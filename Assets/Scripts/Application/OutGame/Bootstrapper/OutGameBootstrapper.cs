@@ -1,6 +1,6 @@
 using Application.Base;
 using Application.Home;
-using Application.Manager;
+using Application.Switcher;
 using VContainer;
 
 namespace Application.OutGame
@@ -11,17 +11,17 @@ namespace Application.OutGame
     public sealed class OutGameBootstrapper : BootstrapperBase
     {
         private readonly IObjectResolver _resolver;
-        private readonly ScreenManager _screenManager;
+        private readonly IScreenSwitcher _screenSwitcher;
         
         public OutGameBootstrapper(IObjectResolver resolver) : base(resolver)
         {
             _resolver = resolver;
-            _screenManager = resolver.Resolve<ScreenManager>();
+            _screenSwitcher = resolver.Resolve<IScreenSwitcher>();
         }
         
         public override void PostInitialize()
         {
-            _screenManager.SetFirstScreenAsync(_resolver.Resolve<HomeScreen>()).Forget();
+            _screenSwitcher.SetFirstScreenAsync(_resolver.Resolve<HomeScreen>()).Forget();
         }
     }
 }

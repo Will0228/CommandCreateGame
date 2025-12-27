@@ -1,5 +1,4 @@
 using Application.Home;
-using Application.Manager;
 using Application.Switcher;
 using Domain.Addressable;
 using Infra.Addressable;
@@ -25,8 +24,6 @@ namespace Application.Base
         
         protected override void Configure(IContainerBuilder builder)
         {
-            builder.Register<ScreenManager>(Lifetime.Singleton);
-            builder.Register<StateManager.StateManager>(Lifetime.Singleton);
             builder.Register<HomeScreen>(Lifetime.Transient);
             
             // Loader
@@ -34,6 +31,8 @@ namespace Application.Base
             
             // Switcher
             builder.Register<ISceneSwitcher, SceneSwitcher>(Lifetime.Singleton);
+            builder.Register<IScreenSwitcher, ScreenSwitcher>(Lifetime.Singleton);
+            builder.Register<IStateSwitcher, StateSwitcher>(Lifetime.Singleton);
         }
     }
 }

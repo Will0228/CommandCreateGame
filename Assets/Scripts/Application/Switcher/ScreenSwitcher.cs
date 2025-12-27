@@ -6,15 +6,15 @@ using R3;
 using VContainer;
 using VContainer.Unity;
 
-namespace Application.Manager
+namespace Application.Switcher
 {
     /// <summary>
     /// スクリーンを管理するマネージャークラス
     /// </summary>
-    public sealed class ScreenManager
+    public sealed class ScreenSwitcher : IScreenSwitcher
     {
         private readonly IAddressableAssetLoader _assetLoader;
-        private readonly StateManager.StateManager _stateManager;
+        private readonly IStateSwitcher _stateSwitcher;
         
         private IScreen _currentScreen;
         private CancellationTokenSource _cts = new();
@@ -22,10 +22,10 @@ namespace Application.Manager
         private readonly LifetimeScope _rootLifetimeScope;
 
         [Inject]
-        public ScreenManager(IObjectResolver resolver)
+        public ScreenSwitcher(IObjectResolver resolver)
         {
             _assetLoader = resolver.Resolve<IAddressableAssetLoader>();
-            _stateManager = resolver.Resolve<StateManager.StateManager>();
+            _stateSwitcher = resolver.Resolve<IStateSwitcher>();
             _rootLifetimeScope = resolver.Resolve<LifetimeScope>();
         }
         
@@ -56,7 +56,7 @@ namespace Application.Manager
                 .Subscribe(screen => SetNextScreenAsync(screen).Forget())
                 .AddTo(_cts.Token);
             
-            _stateManager.SetFirstState(_currentScreen.Resolver.Resolve(_currentScreen.FirstTransitionStateType) as StateBase);
+            _stateSwitcher.SetFirstState(_currentScreen.Resolver.Resolve(_currentScreen.FirstTransitionStateType) as StateBase);
         }
         
         private void ResetCancellationTokenSource()
