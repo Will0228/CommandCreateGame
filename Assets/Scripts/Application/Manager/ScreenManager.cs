@@ -1,6 +1,5 @@
 using System.Threading;
 using Application.Base;
-using Application.Home;
 using Cysharp.Threading.Tasks;
 using Domain.Addressable;
 using R3;
@@ -19,12 +18,15 @@ namespace Application.Manager
         
         private IScreen _currentScreen;
         private CancellationTokenSource _cts = new();
+        
+        private readonly LifetimeScope _rootLifetimeScope;
 
         [Inject]
         public ScreenManager(IObjectResolver resolver)
         {
             _assetLoader = resolver.Resolve<IAddressableAssetLoader>();
             _stateManager = resolver.Resolve<StateManager.StateManager>();
+            _rootLifetimeScope = resolver.Resolve<LifetimeScope>();
         }
         
         public async UniTaskVoid SetNextScreenAsync(IScreen nextScreen)
@@ -43,7 +45,11 @@ namespace Application.Manager
             _currentScreen = nextScreen;
             // 次のシーンを作成
             var screenEntity = await _assetLoader.InstantiateAssetAsync(_currentScreen.AddressKey);
-            var scope = (LifetimeScope)screenEntity.AddComponent(nextScreen.LifetimeScopeType);
+            LifetimeScope scope;
+            using (LifetimeScope.EnqueueParent(_rootLifetimeScope))
+            {
+                scope = (LifetimeScope)screenEntity.AddComponent(nextScreen.LifetimeScopeType);
+            }
             _currentScreen.SetLifetimeContainer(scope.Container);
             
             _currentScreen.NextScreenTransition

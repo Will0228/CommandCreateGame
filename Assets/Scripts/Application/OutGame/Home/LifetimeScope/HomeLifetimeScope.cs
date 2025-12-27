@@ -1,4 +1,3 @@
-using Application.Base;
 using VContainer;
 using VContainer.Unity;
 
@@ -8,7 +7,7 @@ namespace Application.Home
     {
         protected override void Configure(IContainerBuilder builder)
         {
-            builder.Register<HomeInitializeState>(Lifetime.Singleton);
+            builder.Register<HomeInitializeState>(Lifetime.Transient);
             builder.Register<HomeUserPlayableState>(Lifetime.Transient);
         }
     }
