@@ -3,12 +3,12 @@ using Application.Base;
 using Cysharp.Threading.Tasks;
 using R3;
 
-namespace Application.StateManager
+namespace Application.Switcher
 {
     /// <summary>
     /// ステート管理を行うマネージャークラス
     /// </summary>
-    public sealed class StateManager
+    public sealed class StateSwitcher : IStateSwitcher
     {
         private StateBase _currentState;
 
