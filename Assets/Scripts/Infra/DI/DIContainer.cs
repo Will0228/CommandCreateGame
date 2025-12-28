@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Application.Attributes;
+using Application.DI;
 
 namespace Infra.DI
 {
     /// <summary>
     /// DIを担うクラス
     /// </summary>
-    public sealed class DIContainer
+    public sealed class DIContainer : IResolver, IRegister
     {
         public enum Lifetime
         {
@@ -15,7 +16,9 @@ namespace Infra.DI
             Transient
         }
 
-        // ボックス化や頻繁に受け渡しを考えてclassが一番パフォーマンスが良さそう
+        /// <remarks>
+        /// ボックス化や頻繁に受け渡しを考えてclassが一番パフォーマンスが良さそう
+        /// </remarks>
         private class Value
         {
             public Lifetime Lifetime { get; private set; }
@@ -30,9 +33,10 @@ namespace Infra.DI
         
         private readonly Dictionary<Type, Type> _container = new();
 
+
         // public void Register<TInterface, TClass>(Lifetime lifetime) 
         //     where TClass : TInterface
-        public void Register<TInterface, TClass>() 
+        public void Register<TInterface, TClass>()
             where TClass : TInterface
         {
             _container[typeof(TInterface)] = typeof(TClass);
@@ -67,6 +71,10 @@ namespace Infra.DI
                         // 引数の中に、すでに登録済みのクラスが存在する場合はインスタンス化する
                         args[i] = Activator.CreateInstance(instance);
                     }
+                    else if (paramType == typeof(IResolver))
+                    {
+                        args[i] = this;
+                    }
                     else
                     {
                         throw new Exception($"対象のクラスが登録されていません：{paramType}");
@@ -75,6 +83,19 @@ namespace Infra.DI
                 
                 // 注入
                 method.Invoke(target, args);
+            }
+        }
+
+        public T Resolve<T>()
+            where T : class
+        {
+            if (_container.TryGetValue(typeof(T), out var instance))
+            {
+                return Activator.CreateInstance(instance) as T;
+            }
+            else
+            {
+                throw new Exception($"対象のクラスが登録されていません：{typeof(T)}");
             }
         }
     }

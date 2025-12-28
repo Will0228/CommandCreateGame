@@ -5,6 +5,10 @@ using UnityEngine;
 
 namespace Infra
 {
+    /// <summary>
+    /// ゲームの起点
+    /// DIの準備などを行う
+    /// </summary>
     public sealed class CompositionRoot
     {
         private static readonly DIContainer _container = new();

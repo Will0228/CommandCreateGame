@@ -1,4 +1,5 @@
 using Application.Attributes;
+using Application.DI;
 using Domain.Repository;
 
 namespace Application.Test
@@ -14,9 +15,9 @@ namespace Application.Test
         // }
 
         [Inject]
-        public void Test(ITestRepository testRepository)
+        public void Test(ITestRepository testRepository, IResolver resolver)
         {
-            Repository = testRepository;
+            Repository = resolver.Resolve<ITestRepository>();
             Repository.Test();
         }
     }

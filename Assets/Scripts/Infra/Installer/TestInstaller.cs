@@ -1,14 +1,14 @@
+using Application.DI;
 using Domain.Repository;
-using Infra.DI;
 using Infra.Repository;
 
 namespace Infra.Installer
 {
     public sealed class TestInstaller
     {
-        public void Install(DIContainer container)
+        public void Install(IRegister register)
         {
-            container.Register<ITestRepository, TestRepository>();
+            register.Register<ITestRepository, TestRepository>();
         }
     }
 }
