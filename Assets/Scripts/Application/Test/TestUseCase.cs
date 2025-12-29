@@ -8,17 +8,10 @@ namespace Application.Test
     {
         public ITestRepository Repository;
         
-        // [Inject]
-        // public TestUseCase(ITestRepository testRepository)
-        // {
-        //     Repository = testRepository;
-        // }
-
         [Inject]
-        public void Test(ITestRepository testRepository, IResolver resolver)
+        public TestUseCase(IResolver resolver)
         {
             Repository = resolver.Resolve<ITestRepository>();
-            Repository.Test();
         }
     }
 }

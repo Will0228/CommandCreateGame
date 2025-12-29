@@ -20,10 +20,8 @@ namespace Infra
             _testInstaller = new();
             _testInstaller.Install(_container);
 
-            var testUseCase = new TestUseCase();
-            _container.Inject(testUseCase);
-            
-            Debug.Log($"useCaseが持っているDIされた型は : {testUseCase.Repository}");
+            _container.WarmUp();
+            var test = _container.Resolve<TestUseCase>();
         }
     }
 }

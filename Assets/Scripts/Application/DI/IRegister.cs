@@ -6,5 +6,6 @@ namespace Application.DI
     public interface IRegister
     {
         void Register<TInterface, TClass>() where TClass : TInterface;
+        void Register<TClass>() where TClass : class;
     }
 }
