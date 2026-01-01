@@ -1,5 +1,5 @@
 using Root.DI;
-using VContainer;
+using Shared.Attributes;
 
 namespace Application.Base
 {

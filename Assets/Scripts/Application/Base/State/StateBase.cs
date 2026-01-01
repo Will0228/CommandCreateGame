@@ -3,7 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
 using Root.DI;
-using VContainer;
+using Shared.Attributes;
 
 namespace Application.Base
 {

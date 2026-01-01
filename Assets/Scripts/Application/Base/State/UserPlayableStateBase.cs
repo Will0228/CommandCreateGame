@@ -1,6 +1,5 @@
 using Root.DI;
-using VContainer;
-using VContainer.Unity;
+using Shared.Attributes;
 
 namespace Application.Base
 {
