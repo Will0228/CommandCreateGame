@@ -7,8 +7,8 @@ namespace Shared.DI
     {
         protected override void OnRegister(IRegister register)
         {
-            register.Register<HomeInitializeState>();
-            register.Register<HomeUserPlayableState>();
+            register.Register<HomeInitializeState>(Lifetime.Transient);
+            register.Register<HomeUserPlayableState>(Lifetime.Transient);
         }
     }
 }

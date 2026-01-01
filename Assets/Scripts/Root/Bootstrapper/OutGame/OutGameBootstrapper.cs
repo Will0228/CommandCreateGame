@@ -19,6 +19,7 @@ namespace Root.Bootstrapper
             ZLoggerUtility.LogWarning(resolver.GetParentsResolver());
             _resolver = resolver;
             _screenSwitcher = resolver.Resolve<IScreenSwitcher>();
+            var test = resolver.Resolve<ISceneSwitcher>();
         }
         
         public override void ManualInitialize()

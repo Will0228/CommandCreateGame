@@ -30,18 +30,18 @@ namespace Root.DependencyContext
             // 試しに、やり方が間違っている可能性もあるので要検討
             register.RegisterParentDependencyContext(this);
 
-            register.Register<HomeScreen>();
+            register.Register<HomeScreen>(Lifetime.Transient);
             
             // Loader
-            register.Register<IAddressableAssetLoader, AddressableAssetLoader>();
+            register.Register<IAddressableAssetLoader, AddressableAssetLoader>(Lifetime.Singleton);
             
             // Switcher
-            register.Register<ISceneSwitcher, SceneSwitcher>();
-            register.Register<IScreenSwitcher, ScreenSwitcher>();
-            register.Register<IStateSwitcher, StateSwitcher>();
+            register.Register<ISceneSwitcher, SceneSwitcher>(Lifetime.Singleton);
+            register.Register<IScreenSwitcher, ScreenSwitcher>(Lifetime.Singleton);
+            register.Register<IStateSwitcher, StateSwitcher>(Lifetime.Singleton);
             
             // Bootstrapper
-            register.RegisterEntryPoint<InitializeBootstrapper>();
+            register.RegisterEntryPoint<InitializeBootstrapper>(Lifetime.Transient);
         }
     }
 }
