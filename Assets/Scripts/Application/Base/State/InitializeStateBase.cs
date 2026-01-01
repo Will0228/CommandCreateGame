@@ -1,4 +1,5 @@
-using VContainer;
+using Root.DI;
+using Shared.Attributes;
 
 namespace Application.Base
 {
@@ -8,7 +9,7 @@ namespace Application.Base
     public abstract class InitializeStateBase : StateBase
     {
         [Inject]
-        public InitializeStateBase(IObjectResolver resolver) : base(resolver)
+        public InitializeStateBase(IResolver resolver) : base(resolver)
         {
         }
     }

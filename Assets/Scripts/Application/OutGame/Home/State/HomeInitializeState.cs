@@ -1,13 +1,13 @@
 using System.Threading;
 using Application.Base;
 using Cysharp.Threading.Tasks;
-using VContainer;
+using Root.DI;
 
 namespace Application.Home
 {
     public sealed class HomeInitializeState : InitializeStateBase
     {
-        public HomeInitializeState(IObjectResolver resolver) : base(resolver)
+        public HomeInitializeState(IResolver resolver) : base(resolver)
         {
         }
 

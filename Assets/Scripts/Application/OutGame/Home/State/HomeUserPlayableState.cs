@@ -1,13 +1,13 @@
 using System.Threading;
 using Application.Base;
 using Cysharp.Threading.Tasks;
-using VContainer;
+using Root.DI;
 
 namespace Application.Home
 {
     public sealed class HomeUserPlayableState : UserPlayableStateBase
     {
-        public HomeUserPlayableState(IObjectResolver resolver) : base(resolver)
+        public HomeUserPlayableState(IResolver resolver) : base(resolver)
         {
         }
 

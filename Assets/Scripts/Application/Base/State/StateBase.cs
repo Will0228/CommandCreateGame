@@ -2,7 +2,8 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
-using VContainer;
+using Root.DI;
+using Shared.Attributes;
 
 namespace Application.Base
 {
@@ -11,7 +12,7 @@ namespace Application.Base
     /// </summary>
     public abstract class StateBase : IState
     {
-        protected readonly IObjectResolver Resolver; 
+        protected readonly IResolver Resolver; 
         
         protected CompositeDisposable CompositeDisposables;
         protected CancellationTokenSource CancellationTokenSource = new();
@@ -21,7 +22,7 @@ namespace Application.Base
         public Observable<StateBase> TransitionToNextStateAsObservable => _onTransitionToNextStateSubject.AsObservable();
 
         [Inject]
-        public StateBase(IObjectResolver resolver)
+        public StateBase(IResolver resolver)
         {
             Resolver = resolver;
         }
