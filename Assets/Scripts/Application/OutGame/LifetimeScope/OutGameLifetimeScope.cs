@@ -8,11 +8,11 @@ namespace Application.OutGame
     /// </summary>
     public class OutGameLifetimeScope : LifetimeScope
     {
-        protected override void Configure(IContainerBuilder builder)
-        {
-            base.Configure(builder);
-            
-            builder.RegisterEntryPoint<OutGameBootstrapper>();
-        }
+        // protected override void Configure(IContainerBuilder builder)
+        // {
+        //     base.Configure(builder);
+        //     
+        //     builder.RegisterEntryPoint<OutGameBootstrapper>();
+        // }
     }
 }

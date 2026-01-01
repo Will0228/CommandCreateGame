@@ -1,3 +1,4 @@
+using Root.DI;
 using VContainer;
 using VContainer.Unity;
 
@@ -9,7 +10,7 @@ namespace Application.Base
     public abstract class UserPlayableStateBase : StateBase
     {
         [Inject]
-        public UserPlayableStateBase(IObjectResolver resolver) : base(resolver)
+        public UserPlayableStateBase(IResolver resolver) : base(resolver)
         {
             
         }

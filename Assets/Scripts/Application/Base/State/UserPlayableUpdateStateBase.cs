@@ -1,4 +1,4 @@
-using VContainer;
+using Root.DI;
 using VContainer.Unity;
 
 namespace Application.Base
@@ -8,7 +8,7 @@ namespace Application.Base
     /// </summary>
     public abstract class UserPlayableUpdateStateBase : UserPlayableStateBase, ITickable
     {
-        protected UserPlayableUpdateStateBase(IObjectResolver resolver) : base(resolver)
+        protected UserPlayableUpdateStateBase(IResolver resolver) : base(resolver)
         {
         }
 
