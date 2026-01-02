@@ -260,30 +260,12 @@ namespace Shared.DI
         {
             if (typeof(T) == typeof(DependencyContextBase))
             {
-                return _parentDependencyContext as T;
+                return ResolveParentDependencyContext() as T;
             }
-            
-            
             if (_registries.TryGetValue(typeof(T), out var value))
             {
-                // シングルトンかつインスタンスがすでに存在する場合
-                if (value.Lifetime == Lifetime.Singleton && value.Instance != null)
-                {
-                    return value.Instance as T;
-                }
-                
-                var instance = _compiledFactories[value.ConcreteType](this);
-                _compiledInjectors[value.ConcreteType](instance, this);
-
-                // もしシングルトンの場合はインスタンスを保存
-                if (value.Lifetime == Lifetime.Singleton)
-                {
-                    value.Instance = instance;
-                }
-                
-                return instance as T;
+                return ResolveInstance(value) as T;
             }
-
             if (_parent != null)
             {
                 return _parent.Resolve<T>();
@@ -296,16 +278,12 @@ namespace Shared.DI
         {
             if (type == typeof(DependencyContextBase))
             {
-                return _parentDependencyContext;
+                return ResolveParentDependencyContext();
             }
-            
             if (_registries.TryGetValue(type, out var value))
             {
-                var instance = _compiledFactories[value.ConcreteType](this);
-                _compiledInjectors[value.ConcreteType](instance, this);
-                return instance;
+                return ResolveInstance(value);
             }
-
             if (_parent != null)
             {
                 return _parent.Resolve(type);
@@ -342,13 +320,31 @@ namespace Shared.DI
         {
             if (_entryPointMappings.TryGetValue(type, out var value))
             {
-                // すでにインスタンスがあればそれを返す（Singletonの場合）
-                // なければ生成する
-                var instance = _compiledFactories[value.ConcreteType](this);
-                _compiledInjectors[value.ConcreteType](instance, this);
-                return instance;
+                return ResolveInstance(value);
             }
             throw new Exception($"{type.Name} is not registered.");
+        }
+        
+        private object ResolveParentDependencyContext() => _parentDependencyContext;
+
+        private object ResolveInstance(Value value)
+        {
+            // シングルトンかつインスタンスがすでに存在する場合
+            if (value.Lifetime == Lifetime.Singleton && value.Instance != null)
+            {
+                return value.Instance;
+            }
+                
+            var instance = _compiledFactories[value.ConcreteType](this);
+            _compiledInjectors[value.ConcreteType](instance, this);
+
+            // もしシングルトンの場合はインスタンスを保存
+            if (value.Lifetime == Lifetime.Singleton)
+            {
+                value.Instance = instance;
+            }
+            
+            return instance;
         }
     }
 }
