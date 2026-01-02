@@ -8,7 +8,7 @@ namespace Root.DI
     {
         protected override void OnRegister(IRegister register)
         {
-            register.RegisterEntryPoint<OutGameBootstrapper>();
+            register.RegisterEntryPoint<OutGameBootstrapper>(Lifetime.Transient);
         }
     }
 }

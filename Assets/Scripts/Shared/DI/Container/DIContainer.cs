@@ -27,20 +27,22 @@ namespace Shared.DI
         private class Value
         {
             public Lifetime Lifetime { get; private set; }
-            public object Instance { get; private set; }
+            public Type ConcreteType { get; private set; }
+            // Singletonの場合に必要
+            public object Instance { get; set; } 
 
-            public Value(Lifetime lifetime, object instance)
+            public Value(Lifetime lifetime, Type concreteType)
             {
                 Lifetime = lifetime;
-                Instance = instance;
+                ConcreteType = concreteType;
             }
         }
 
         // 現在のDIContainerの親
         private DIContainer _parent;
         
-        private readonly Dictionary<Type, Type> _mappings = new();
-        private readonly Dictionary<Type, Type> _entryPointMappings = new();
+        private readonly Dictionary<Type, Value> _registries = new();
+        private readonly Dictionary<Type, Value> _entryPointMappings = new();
         private readonly Dictionary<Type, Func<IResolver, object>> _compiledFactories = new();
         private readonly Dictionary<Type, Action<object, IResolver>> _compiledInjectors = new();
         private readonly List<IInitializable> _initializables = new();
@@ -59,19 +61,19 @@ namespace Shared.DI
         }
 
         
-        public void Register<TInterface, TClass>() where TClass : TInterface
+        public void Register<TInterface, TClass>(Lifetime lifetime) where TClass : TInterface
         {
-            _mappings[typeof(TInterface)] = typeof(TClass);
+            _registries[typeof(TInterface)] = new Value(lifetime, typeof(TClass));
         }
 
-        public void Register<TClass>() where TClass : class
+        public void Register<TClass>(Lifetime lifetime) where TClass : class
         {
-            _mappings[typeof(TClass)] = typeof(TClass);
+            _registries[typeof(TClass)] = new Value(lifetime, typeof(TClass));
         }
 
-        public void RegisterEntryPoint<TClass>() where TClass : class
+        public void RegisterEntryPoint<TClass>(Lifetime lifetime) where TClass : class
         {
-            _entryPointMappings[typeof(TClass)] = typeof(TClass);
+            _entryPointMappings[typeof(TClass)] = new Value(lifetime, typeof(TClass));
         }
 
         public void RegisterParentDependencyContext(DependencyContextBase instance)
@@ -85,15 +87,15 @@ namespace Shared.DI
         /// </summary>
         public void WarmUp()
         {
-            foreach (var mapping in _mappings)
+            foreach (var mapping in _registries)
             {
-                var concreateType = mapping.Value;
+                var concreateType = mapping.Value.ConcreteType;
                 CompileSettings(concreateType);
             }
             
             foreach (var mapping in _entryPointMappings)
             {
-                var concreateType = mapping.Value;
+                var concreateType = mapping.Value.ConcreteType;
                 CompileSettings(concreateType);
                 var instance = ResolveInternal(concreateType);
                 
@@ -229,7 +231,7 @@ namespace Shared.DI
                 for (var i = 0; i < parameters.Length; i++)
                 {
                     var paramType = parameters[i].ParameterType;
-                    if (_mappings.TryGetValue(paramType, out var instance))
+                    if (_registries.TryGetValue(paramType, out var instance))
                     {
                         // 引数の中に、すでに登録済みのクラスが存在する場合はインスタンス化する
                         var resolverMethod = typeof(IResolver).GetMethod("Resolve").MakeGenericMethod(paramType);
@@ -258,16 +260,12 @@ namespace Shared.DI
         {
             if (typeof(T) == typeof(DependencyContextBase))
             {
-                return _parentDependencyContext as T;
+                return ResolveParentDependencyContext() as T;
             }
-            
-            if (_mappings.TryGetValue(typeof(T), out var concreateType))
+            if (_registries.TryGetValue(typeof(T), out var value))
             {
-                var instance = _compiledFactories[concreateType](this);
-                _compiledInjectors[concreateType](instance, this);
-                return instance as T;
+                return ResolveInstance(value) as T;
             }
-
             if (_parent != null)
             {
                 return _parent.Resolve<T>();
@@ -280,16 +278,12 @@ namespace Shared.DI
         {
             if (type == typeof(DependencyContextBase))
             {
-                return _parentDependencyContext;
+                return ResolveParentDependencyContext();
             }
-            
-            if (_mappings.TryGetValue(type, out var concreateType))
+            if (_registries.TryGetValue(type, out var value))
             {
-                var instance = _compiledFactories[concreateType](this);
-                _compiledInjectors[concreateType](instance, this);
-                return instance;
+                return ResolveInstance(value);
             }
-
             if (_parent != null)
             {
                 return _parent.Resolve(type);
@@ -324,15 +318,33 @@ namespace Shared.DI
         /// </summary>
         private object ResolveInternal(Type type)
         {
-            if (_entryPointMappings.TryGetValue(type, out var concreteType))
+            if (_entryPointMappings.TryGetValue(type, out var value))
             {
-                // すでにインスタンスがあればそれを返す（Singletonの場合）
-                // なければ生成する
-                var instance = _compiledFactories[concreteType](this);
-                _compiledInjectors[concreteType](instance, this);
-                return instance;
+                return ResolveInstance(value);
             }
             throw new Exception($"{type.Name} is not registered.");
+        }
+        
+        private object ResolveParentDependencyContext() => _parentDependencyContext;
+
+        private object ResolveInstance(Value value)
+        {
+            // シングルトンかつインスタンスがすでに存在する場合
+            if (value.Lifetime == Lifetime.Singleton && value.Instance != null)
+            {
+                return value.Instance;
+            }
+                
+            var instance = _compiledFactories[value.ConcreteType](this);
+            _compiledInjectors[value.ConcreteType](instance, this);
+
+            // もしシングルトンの場合はインスタンスを保存
+            if (value.Lifetime == Lifetime.Singleton)
+            {
+                value.Instance = instance;
+            }
+            
+            return instance;
         }
     }
 }

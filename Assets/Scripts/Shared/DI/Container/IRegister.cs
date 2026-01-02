@@ -7,9 +7,9 @@ namespace Shared.DI
     /// </summary>
     public interface IRegister
     {
-        void Register<TInterface, TClass>() where TClass : TInterface;
-        void Register<TClass>() where TClass : class;
-        void RegisterEntryPoint<TClass>() where TClass : class;
+        void Register<TInterface, TClass>(Lifetime lifetime) where TClass : TInterface;
+        void Register<TClass>(Lifetime lifetime) where TClass : class;
+        void RegisterEntryPoint<TClass>(Lifetime lifetime) where TClass : class;
         void RegisterParentDependencyContext(DependencyContextBase instance);
     }
 }
