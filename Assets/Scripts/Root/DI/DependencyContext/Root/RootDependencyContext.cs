@@ -16,16 +16,6 @@ namespace Root.DependencyContext
     /// </summary>
     public sealed class RootDependencyContext : DependencyContextBase
     {
-        protected override void Awake()
-        {
-            if (transform.parent == null)
-            {
-                DontDestroyOnLoad(gameObject);
-            }
-            
-            base.Awake();
-        }
-
         protected override void OnRegister(IRegister register)
         {
             // TODO

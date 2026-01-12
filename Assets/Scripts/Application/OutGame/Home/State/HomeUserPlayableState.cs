@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Root.DI;
 
 using R3;
+using UnityEngine;
 
 namespace Application.Home
 {
@@ -24,9 +25,6 @@ namespace Application.Home
         protected override void SetEvent()
         {
             Subscribe(_presenter.ButtonClickedAsObservable, _ =>_sceneSwitcher.ChangeSceneAsync(SceneType.InGame));
-            _presenter.ButtonClickedAsObservable
-                .Subscribe(_ => _sceneSwitcher.ChangeSceneAsync(SceneType.InGame))
-                .AddTo(CompositeDisposable);
         }
 
         protected override void Bind(){}
@@ -34,6 +32,10 @@ namespace Application.Home
         protected override async UniTask ConfigureAsync(CancellationToken token)
         {
             
+        }
+
+        public override void Dispose()
+        {
         }
     }
 }
