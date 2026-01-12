@@ -149,16 +149,10 @@ namespace Shared.DI
         private Func<IResolver, object> Compile(Type type)
         {
             // IResolverを渡しているコンストラクタを探す
-            // var constructorWithResolver = type.GetConstructor(new[] { typeof(IResolver) });
-            // var parameterlessConstructor = type.GetConstructor(Type.EmptyTypes);
             var ctor = type.GetConstructors()
                 .OrderByDescending(c => c.GetParameters().Length)
                 .FirstOrDefault();
-
-            // if (constructorWithResolver == null && parameterlessConstructor == null)
-            // {
-            //     throw new Exception($"{type.Name} を持つコンストラクタが見つかりませんでした");
-            // }
+            
             if (ctor == null)
             {
                 throw new Exception($"{type.Name} を持つコンストラクタが見つかりませんでした");
@@ -169,16 +163,7 @@ namespace Shared.DI
             var parameters = ctor.GetParameters();
             
             // コンストラクタ呼び出し式
-            // new T(resolver)
             NewExpression newExpression;
-            // if (constructorWithResolver != null)
-            // {
-            //     newExpression = Expression.New(constructorWithResolver, resolverParam);
-            // }
-            // else
-            // {
-            //     newExpression = Expression.New(parameterlessConstructor);
-            // }
             if (parameters.Length == 0)
             {
                 // 引数なしコンストラクタの場合
