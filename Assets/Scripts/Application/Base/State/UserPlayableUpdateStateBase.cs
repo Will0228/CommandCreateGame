@@ -1,7 +1,8 @@
+using Application.Base;
 using Root.DI;
 using Root.EntryPointInterface;
 
-namespace Application.Base
+namespace Shared.Base
 {
     /// <summary>
     /// ユーザーが操作可能かつ毎フレーム動くステートの基底クラス

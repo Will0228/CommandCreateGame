@@ -1,4 +1,5 @@
 using Shared.DependencyContext;
+using UnityEngine;
 
 namespace Shared.DI
 {
@@ -11,5 +12,6 @@ namespace Shared.DI
         void Register<TClass>(Lifetime lifetime) where TClass : class;
         void RegisterEntryPoint<TClass>(Lifetime lifetime) where TClass : class;
         void RegisterParentDependencyContext(DependencyContextBase instance);
+        void RegisterComponent<TClass>(TClass instance) where TClass : MonoBehaviour;
     }
 }

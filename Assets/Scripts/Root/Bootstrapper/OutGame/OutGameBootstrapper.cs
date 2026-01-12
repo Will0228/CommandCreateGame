@@ -1,7 +1,7 @@
+using Application.Switcher;
 using Common.ZLogger;
 using Root.DI;
 using Root.Screen;
-using Root.Switcher;
 using Shared.Bootstrapper;
 
 namespace Root.Bootstrapper
@@ -16,10 +16,8 @@ namespace Root.Bootstrapper
         
         public OutGameBootstrapper(IResolver resolver) : base(resolver)
         {
-            ZLoggerUtility.LogWarning(resolver.GetParentsResolver());
             _resolver = resolver;
             _screenSwitcher = resolver.Resolve<IScreenSwitcher>();
-            var test = resolver.Resolve<ISceneSwitcher>();
         }
         
         public override void ManualInitialize()

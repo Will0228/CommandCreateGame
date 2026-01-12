@@ -14,7 +14,7 @@ namespace Application.Base
     {
         protected readonly IResolver Resolver; 
         
-        protected CompositeDisposable CompositeDisposables;
+        protected CompositeDisposable CompositeDisposable = new();
         protected CancellationTokenSource CancellationTokenSource = new();
 
         // 別のステートに遷移して画面が閉じられるときに発火される
@@ -55,12 +55,12 @@ namespace Application.Base
         /// </summary>
         protected void Subscribe<T>(Observable<T> source, Action<T> onNext)
         {
-            source.Subscribe(onNext).AddTo(CompositeDisposables);
+            source.Subscribe(onNext).AddTo(CompositeDisposable);
         }
 
         public void Dispose()
         {
-            CompositeDisposables?.Dispose();
+            CompositeDisposable?.Dispose();
             _onTransitionToNextStateSubject?.Dispose();
             
             CancellationTokenSource?.Cancel();
