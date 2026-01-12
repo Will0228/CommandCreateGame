@@ -58,7 +58,7 @@ namespace Application.Base
             source.Subscribe(onNext).AddTo(CompositeDisposable);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             CompositeDisposable?.Dispose();
             _onTransitionToNextStateSubject?.Dispose();
