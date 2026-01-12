@@ -1,7 +1,9 @@
+using System;
+using Application.Switcher;
 using Domain.Addressable;
 using Infra.Addressable;
 using Root.Bootstrapper;
-using Root.DI;
+using Root.Factory;
 using Root.Screen;
 using Root.Switcher;
 using Shared.DependencyContext;
@@ -39,6 +41,9 @@ namespace Root.DependencyContext
             register.Register<ISceneSwitcher, SceneSwitcher>(Lifetime.Singleton);
             register.Register<IScreenSwitcher, ScreenSwitcher>(Lifetime.Singleton);
             register.Register<IStateSwitcher, StateSwitcher>(Lifetime.Singleton);
+            
+            // Factory
+            register.Register<DependencyContextFactory>(Lifetime.Singleton);
             
             // Bootstrapper
             register.RegisterEntryPoint<InitializeBootstrapper>(Lifetime.Transient);

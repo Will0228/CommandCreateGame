@@ -2,6 +2,7 @@
     "name": "DI",
     "rootNamespace": "",
     "references": [
+        "GUID:9c30afc73f5a343579be0cb4274f289a",
         "GUID:0ae5c9fee4f5f4f37a5d28aa8f4282e2",
         "GUID:4375fa972e9894504a5f94dcf86ad8a9",
         "GUID:fde77ac5228dc454888bf254ac73f78d",

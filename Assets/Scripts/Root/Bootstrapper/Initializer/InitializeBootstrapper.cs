@@ -1,5 +1,5 @@
+using Application.Switcher;
 using Root.DI;
-using Root.Switcher;
 using Shared.Bootstrapper;
 
 namespace Root.Bootstrapper
@@ -18,7 +18,7 @@ namespace Root.Bootstrapper
 
         public override void ManualInitialize()
         {
-            _sceneSwitcher.ChangeScene(SceneType.OutGame);
+            _sceneSwitcher.ChangeSceneAsync(SceneType.OutGame);
         }
     }
 }

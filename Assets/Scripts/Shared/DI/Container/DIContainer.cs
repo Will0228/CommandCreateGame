@@ -7,6 +7,7 @@ using Root.DI;
 using Root.EntryPointInterface;
 using Shared.Attributes;
 using Shared.DependencyContext;
+using UnityEngine;
 
 namespace Shared.DI
 {
@@ -35,6 +36,13 @@ namespace Shared.DI
             {
                 Lifetime = lifetime;
                 ConcreteType = concreteType;
+            }
+
+            public Value(Lifetime lifetime, Type concreteType, object instance)
+            {
+                Lifetime = lifetime;
+                ConcreteType = concreteType;
+                Instance = instance;
             }
         }
 
@@ -79,6 +87,16 @@ namespace Shared.DI
         public void RegisterParentDependencyContext(DependencyContextBase instance)
         {
             _parentDependencyContext = instance;
+        }
+
+        /// <summary>
+        /// MonoBehaviourを継承しているクラスの依存解決
+        /// 新しいクラスを作成しないようにSingletonで登録
+        /// </summary>
+        public void RegisterComponent<TClass>(TClass instance) where TClass : MonoBehaviour
+        {
+            var type = instance.GetType();
+            _registries[type] = new Value(Lifetime.Singleton, type,  instance);
         }
 
         /// <summary>

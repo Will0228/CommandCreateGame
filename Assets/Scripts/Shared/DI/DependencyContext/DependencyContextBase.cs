@@ -61,6 +61,8 @@ namespace Shared.DependencyContext
                 Build();
             }
         }
+        
+        public void ManualBuild() => Build();
 
         public void Build()
         {
@@ -100,7 +102,7 @@ namespace Shared.DependencyContext
 
         private class ScopeClearer : IDisposable
         {
-            public void Dispose() => _parentDependencyContext = null;
+            public void Dispose(){}
         }
     }
 }
