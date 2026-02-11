@@ -1,3 +1,4 @@
+using System;
 using Application.Switcher;
 using Root.DI;
 using Shared.Bootstrapper;
@@ -7,7 +8,7 @@ namespace Root.Bootstrapper
     /// <summary>
     /// ゲーム開始時のBootstrapper
     /// </summary>
-    public sealed class InitializeBootstrapper : BootstrapperBase
+    public sealed class InitializeBootstrapper : BootstrapperBase, IDisposable
     {
         private readonly ISceneSwitcher _sceneSwitcher;
         
@@ -19,6 +20,10 @@ namespace Root.Bootstrapper
         public override void ManualInitialize()
         {
             _sceneSwitcher.ChangeSceneAsync(SceneType.OutGame);
+            onDestroySubject.OnNext(this);
         }
+
+
+        public void Dispose() {}
     }
 }

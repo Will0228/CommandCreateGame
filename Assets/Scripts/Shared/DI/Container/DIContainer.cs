@@ -11,16 +11,11 @@ using UnityEngine;
 
 namespace Shared.DI
 {
-    public enum Lifetime
-    {
-        Singleton,
-        Transient
-    }
     
     /// <summary>
     /// DIを担うクラス
     /// </summary>
-    internal sealed class DIContainer : IResolver, IRegister
+    internal sealed class DIContainer
     {
         public static void InitializeGame()
         {
@@ -47,11 +42,11 @@ namespace Shared.DI
         /// MonoBehaviourを継承しているクラスの依存解決
         /// 新しいクラスを作成しないようにSingletonで登録
         /// </summary>
-        public void RegisterComponent<TClass>(TClass instance) where TClass : MonoBehaviour
-        {
-            var type = instance.GetType();
-            _registries[type] = new Value(Lifetime.Singleton, type,  instance);
-        }
+        // public void RegisterComponent<TClass>(TClass instance) where TClass : MonoBehaviour
+        // {
+        //     var type = instance.GetType();
+        //     _registries[type] = new Value(Lifetime.Singleton, type,  instance);
+        // }
 
         // /// <summary>
         // /// ローディング中に一括コンパイル
@@ -212,96 +207,96 @@ namespace Shared.DI
         //     return lambda.Compile();
         // }
 
-        public T Resolve<T>()
-            where T : class
-        {
-            if (typeof(T) == typeof(DependencyContextBase))
-            {
-                return ResolveParentDependencyContext() as T;
-            }
-            if (_registries.TryGetValue(typeof(T), out var value))
-            {
-                return ResolveInstance(value) as T;
-            }
-            if (_parent != null)
-            {
-                return _parent.Resolve<T>();
-            }
-            
-            throw new Exception($"対象のクラスが登録されていません：{typeof(T)}");
-        }
-
-        public object Resolve(Type type)
-        {
-            if (type == typeof(DependencyContextBase))
-            {
-                return ResolveParentDependencyContext();
-            }
-            if (_registries.TryGetValue(type, out var value))
-            {
-                return ResolveInstance(value);
-            }
-            if (_parent != null)
-            {
-                return _parent.Resolve(type);
-            }
-            
-            throw new Exception($"対象のクラスが登録されていません：{type}");
-        }
-
-#if UNITY_EDITOR
-        // 確認用として現在の親のResolverとして何が存在するのかを取得する
-        public string GetParentsResolver()
-        {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append(GetDependencyContextName());
-            
-            if (_parent != null)
-            {
-                stringBuilder.Append(_parent.GetParentsResolver());
-            }
-            
-            return stringBuilder.ToString();
-        }
-
-        public string GetDependencyContextName()
-        {
-            return _parent + "¥n";
-        }
-#endif
-
-        // /// <summary>
-        // /// EntryPointで登録したクラスを特殊ルートでインスタンス化したい場合
-        // /// </summary>
-        // private object ResolveInternal(Type type)
-        // {
-        //     if (_entryPointMappings.TryGetValue(type, out var value))
-        //     {
-        //         return ResolveInstance(value);
-        //     }
-        //     throw new Exception($"{type.Name} is not registered.");
-        // }
-        
-        private object ResolveParentDependencyContext() => _parentDependencyContext;
-
-        private object ResolveInstance(Value value)
-        {
-            // シングルトンかつインスタンスがすでに存在する場合
-            if (value.Lifetime == Lifetime.Singleton && value.Instance != null)
-            {
-                return value.Instance;
-            }
-                
-            var instance = _compiledFactories[value.ConcreteType](this);
-            _compiledInjectors[value.ConcreteType](instance, this);
-
-            // もしシングルトンの場合はインスタンスを保存
-            if (value.Lifetime == Lifetime.Singleton)
-            {
-                value.Instance = instance;
-            }
-            
-            return instance;
-        }
+//         public T Resolve<T>()
+//             where T : class
+//         {
+//             if (typeof(T) == typeof(DependencyContextBase))
+//             {
+//                 return ResolveParentDependencyContext() as T;
+//             }
+//             if (_registries.TryGetValue(typeof(T), out var value))
+//             {
+//                 return ResolveInstance(value) as T;
+//             }
+//             if (_parent != null)
+//             {
+//                 return _parent.Resolve<T>();
+//             }
+//             
+//             throw new Exception($"対象のクラスが登録されていません：{typeof(T)}");
+//         }
+//
+//         public object Resolve(Type type)
+//         {
+//             if (type == typeof(DependencyContextBase))
+//             {
+//                 return ResolveParentDependencyContext();
+//             }
+//             if (_registries.TryGetValue(type, out var value))
+//             {
+//                 return ResolveInstance(value);
+//             }
+//             if (_parent != null)
+//             {
+//                 return _parent.Resolve(type);
+//             }
+//             
+//             throw new Exception($"対象のクラスが登録されていません：{type}");
+//         }
+//
+// #if UNITY_EDITOR
+//         // 確認用として現在の親のResolverとして何が存在するのかを取得する
+//         public string GetParentsResolver()
+//         {
+//             var stringBuilder = new StringBuilder();
+//             stringBuilder.Append(GetDependencyContextName());
+//             
+//             if (_parent != null)
+//             {
+//                 stringBuilder.Append(_parent.GetParentsResolver());
+//             }
+//             
+//             return stringBuilder.ToString();
+//         }
+//
+//         public string GetDependencyContextName()
+//         {
+//             return _parent + "¥n";
+//         }
+// #endif
+//
+//         // /// <summary>
+//         // /// EntryPointで登録したクラスを特殊ルートでインスタンス化したい場合
+//         // /// </summary>
+//         // private object ResolveInternal(Type type)
+//         // {
+//         //     if (_entryPointMappings.TryGetValue(type, out var value))
+//         //     {
+//         //         return ResolveInstance(value);
+//         //     }
+//         //     throw new Exception($"{type.Name} is not registered.");
+//         // }
+//         
+//         private object ResolveParentDependencyContext() => _parentDependencyContext;
+//
+//         private object ResolveInstance(Value value)
+//         {
+//             // シングルトンかつインスタンスがすでに存在する場合
+//             if (value.Lifetime == Lifetime.Singleton && value.Instance != null)
+//             {
+//                 return value.Instance;
+//             }
+//                 
+//             var instance = _compiledFactories[value.ConcreteType](this);
+//             _compiledInjectors[value.ConcreteType](instance, this);
+//
+//             // もしシングルトンの場合はインスタンスを保存
+//             if (value.Lifetime == Lifetime.Singleton)
+//             {
+//                 value.Instance = instance;
+//             }
+//             
+//             return instance;
+//         }
     }
 }

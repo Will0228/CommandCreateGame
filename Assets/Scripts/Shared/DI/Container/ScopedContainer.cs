@@ -4,7 +4,6 @@ using System.Text;
 using Root.DI;
 using Root.EntryPointInterface;
 using Shared.DependencyContext;
-using Shared.DI;
 
 namespace Shared.DI
 {
@@ -39,9 +38,6 @@ namespace Shared.DI
     /// </summary>
     public sealed class ScopedContainer : IResolver, IRegister, IDisposable
     {
-        
-        
-        
         private readonly RegistrationRegistry _registrationRegistry;
         private readonly ScopedContainer _parentContainer;
         private IResolver _parentResolver => _parentContainer;
@@ -57,8 +53,11 @@ namespace Shared.DI
         private readonly Dictionary<Type, List<Value>> _multiRegisteredTypes = new();
         
         // EntryPointで登録されたオブジェクトが管理されている
-        private readonly List<IInitializable> _initializables = new();
-        private readonly List<IUpdatable> _updatables = new();
+        private readonly List<IInitializable> _initializableClasses = new();
+        public IReadOnlyList<IInitializable> InitializableClassClasses => _initializableClasses;
+        
+        private readonly List<IUpdatable> _updatableClasses = new();
+        public IReadOnlyList<IUpdatable> UpdatableClasses =>  _updatableClasses;
         
         public ScopedContainer(RegistrationRegistry registrationRegistry)
         {
@@ -176,11 +175,11 @@ namespace Shared.DI
             {
                 if (instance is IInitializable initializable)
                 {
-                    _initializables.Add(initializable);
+                    _initializableClasses.Add(initializable);
                 }
                 if (instance is IUpdatable updatable)
                 {
-                    _updatables.Add(updatable);
+                    _updatableClasses.Add(updatable);
                 }
             }
         }
@@ -220,30 +219,8 @@ namespace Shared.DI
             var type = instance.GetType();
             _registeredTypes[type] = new Value(Lifetime.Singleton, type,  instance);
         }
-        
-        public RegistrationBuilder RegisterTest<TClass>(Lifetime lifetime) where TClass : class
-        {
-            var implementationType = typeof(TClass);
-        
-            // 1. 実体のコンパイル（作り方のレシピを作成）
-            var factory = Compile(implementationType);
-
-            // ※ ここで Singleton の場合はキャッシュロジックでラップする処理が入る（後述）
-
-            // 2. 実体型そのものをキーとして登録
-            if (!_compiledFactories.TryAdd(implementationType, factory))
-            {
-                throw new InvalidOperationException($"{implementationType.Name} は既に登録されています。");
-            }
-
-            // 3. ★重要★ ビルダーを作って返す
-            // これにより、後ろに .As() を繋げられるようになる
-            return new RegistrationBuilder(implementationType, factory);
-        }
 
         #endregion
-        
-        
 
         public void Dispose()
         {

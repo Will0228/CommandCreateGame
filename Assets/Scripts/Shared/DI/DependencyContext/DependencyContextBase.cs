@@ -63,7 +63,7 @@ namespace Shared.DependencyContext
         
         protected virtual void Awake()
         {
-            _cachedInstances[this.GetType()] = this;
+            _cachedInstances[GetType()] = this;
             
             // 親をインスペクターで設定するようにしている場合はシーン上から見つけ出してそれを親とする
             if (!string.IsNullOrEmpty(_typeName))
@@ -83,7 +83,7 @@ namespace Shared.DependencyContext
         
         public void ManualBuild() => Build();
 
-        public void Build()
+        private void Build()
         {
             // コンテナがすでに存在する場合は処理をスキップする
             if (_container != null)
@@ -95,7 +95,7 @@ namespace Shared.DependencyContext
             OnRegister(_container);
             _register.WarmUp();
             
-            foreach (var initializable in _container.Initializables)
+            foreach (var initializable in _container.InitializableClassClasses)
             {
                 initializable.ManualInitialize();
             }
@@ -103,7 +103,7 @@ namespace Shared.DependencyContext
 
         private void Update()
         {
-            foreach (var updatable in _container.Updatables)
+            foreach (var updatable in _container.UpdatableClasses)
             {
                 updatable.ManualUpdate();
             }

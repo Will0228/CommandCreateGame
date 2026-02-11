@@ -6,8 +6,15 @@ using Root.DI;
 using Root.EntryPointInterface;
 using Shared.Attributes;
 
-namespace Shared
+namespace Shared.DI
 {
+    public enum Lifetime
+    {
+        Singleton,
+        Transient,
+        SelfDestruct
+    }
+    
     /// <summary>
     /// インスタンスを生成するためのレシピを管理するクラス
     /// </summary>
@@ -45,7 +52,8 @@ namespace Shared
         /// </summary>
         /// <param name="resolver"></param>
         /// <returns>EntryPointで登録されたインスタンス</returns>
-        public IReadOnlyList<Object> WarmUp(IResolver resolver)
+        /// <returns>SelfDestrucで登録されたインスタンス</returns>
+        public (IReadOnlyList<Object> entryPointInstances, IReadOnlyList<SelfDestructibleBaseClass> selfDestructibleInstances) WarmUp(IResolver resolver)
         {
             foreach (var type in _registryTypes)
             {

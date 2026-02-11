@@ -13,7 +13,6 @@ namespace Shared.DI
         void Register<TClass>(Lifetime lifetime) where TClass : class;
         void RegisterEntryPoint<TClass>(Lifetime lifetime) where TClass : class;
         void RegisterComponent<TClass>(TClass instance) where TClass : MonoBehaviour;
-        RegistrationBuilder Register<TClass>(Lifetime lifetime) where TClass : class;
-        // void RegisterMultipleClass<TInterface>
+        // RegistrationBuilder Register<TClass>(Lifetime lifetime) where TClass : class;
     }
 }

@@ -1,6 +1,7 @@
 using Application.InGame;
 using Common.ZLogger;
 using Presenter.OutGame;
+using Shared;
 using Shared.DependencyContext;
 using Shared.DI;
 
