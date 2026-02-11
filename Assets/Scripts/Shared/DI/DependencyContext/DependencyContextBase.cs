@@ -6,16 +6,36 @@ using UnityEngine;
 
 namespace Shared.DependencyContext
 {
+    internal class InstanceRegistration
+    {
+        public object Instance;
+        public bool ShouldDispose;
+    }
+    
     public abstract class DependencyContextBase : MonoBehaviour
     {
         [Header("自動でDIを行うかどうか")]
         [SerializeField] private bool _autoRun;
 
-        [SerializeField] private string TypeName;
-        [SerializeField] private ParentDependencyContextReference _parentDependencyContextReference;
+        // DependencyContextEditorでインスペクター改造を行っています
+        [HideInInspector] 
+        [SerializeField] private string _typeName;
         
-        private DIContainer _container;
-        public DIContainer Container => _container;
+        // private DIContainer _container;
+        private ScopedContainer _container;
+        private IRegister _register => _container;
+        private IResolver _resolver => _container;
+        
+        // SetParentで親スコープを定義するためにstaticにしている
+        private static DependencyContextBase _parentDependencyContext;
+
+        // このDependencyContextで登録したType
+        // 実際にインスタンスを作成するときはレシピから行うが、レシピには別のDependencyContextで登録したクラスも含まれるので
+        // このDependencyContextに含まれているかどうかで判断する必要がある（登録していないのに依存注入できた、というケースが存在するため）
+        // FIXME
+        // 親DependencyContextで既に登録されていないかを、登録時にバリデチェックする必要はある
+        private HashSet<Type> _registeredTypes = new HashSet<Type>();
+        private readonly Dictionary<Type, InstanceRegistration> _instances = new();
 
         public IResolver Resolver
         {
@@ -29,7 +49,6 @@ namespace Shared.DependencyContext
             }
         }
         
-        private static DependencyContextBase _parentDependencyContext;
         
         // 過去のDependencyContextのキャッシュ
         // 親として指定したいインスタンスがあれば即座に発見できるように
@@ -41,15 +60,15 @@ namespace Shared.DependencyContext
             _parentDependencyContext = parent;
             return new ScopeClearer();
         }
-
+        
         protected virtual void Awake()
         {
             _cachedInstances[this.GetType()] = this;
             
             // 親をインスペクターで設定するようにしている場合はシーン上から見つけ出してそれを親とする
-            if (!string.IsNullOrEmpty(TypeName))
+            if (!string.IsNullOrEmpty(_typeName))
             {
-                var parentType = Type.GetType(TypeName);
+                var parentType = Type.GetType(_typeName);
                 if (parentType != null && _cachedInstances.TryGetValue(parentType, out var parentInstance))
                 {
                     _parentDependencyContext = parentInstance;
@@ -71,10 +90,10 @@ namespace Shared.DependencyContext
             {
                 return;
             }
-            
-            _container = new DIContainer(_parentDependencyContext == null ? null : _parentDependencyContext.Container);
+
+            _container = new ScopedContainer(DIInitializer.RegistrationRegistry);
             OnRegister(_container);
-            _container.WarmUp();
+            _register.WarmUp();
             
             foreach (var initializable in _container.Initializables)
             {
