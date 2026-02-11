@@ -21,7 +21,7 @@ namespace Root.DependencyContext
             // TODO
             // 試しに、やり方が間違っている可能性もあるので要検討
             register.RegisterParentDependencyContext(this);
-
+            
             register.Register<HomeScreen>(Lifetime.Transient);
             
             // Loader

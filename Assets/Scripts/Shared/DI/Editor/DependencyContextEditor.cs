@@ -13,7 +13,7 @@ namespace Shared.DI.Editor
             DrawDefaultInspector();
             
             var script = (DependencyContextBase)target;
-            var typeNameProp = serializedObject.FindProperty("TypeName");
+            var typeNameProp = serializedObject.FindProperty("_typeName");
             
             // 1. 編集中のオブジェクト（target）自身の型のアセンブリを取得
             var targetAssembly = target.GetType().Assembly;
@@ -29,7 +29,7 @@ namespace Shared.DI.Editor
             int currentIndex = allContextTypes.FindIndex(t => t.AssemblyQualifiedName == typeNameProp.stringValue) + 1;
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField($"Parent Selection ({targetAssembly.GetName().Name})", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"親スコープを設定してください。シーン上に存在する場合はそれを親として設定します。");
             int nextIndex = EditorGUILayout.Popup("Parent Context Type", currentIndex, displayNames.ToArray());
 
             if (nextIndex != currentIndex)
