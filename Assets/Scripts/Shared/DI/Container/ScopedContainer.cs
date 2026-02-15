@@ -4,7 +4,6 @@ using System.Text;
 using R3;
 using Root.DI;
 using Root.EntryPointInterface;
-using Shared.DependencyContext;
 using UnityEngine;
 using Object = System.Object;
 
@@ -41,35 +40,22 @@ namespace Shared.DI
     /// </summary>
     public sealed class ScopedContainer : IResolver, IRegister, IDisposable
     {
+        private readonly InstanceStorage _instanceStorage;
+        
         private readonly RegistrationRegistry _registrationRegistry;
         private readonly ScopedContainer _parentContainer;
         private IResolver _parentResolver => _parentContainer;
-        // このコンテナを作成したDependencyContext
-        private readonly DependencyContextBase _dependencyContext;
         
-        // Disposableを継承したクラスを管理
-        // DependencyContextが破棄されたときにDisposeを呼び出すため
-        private List<IDisposable> _disposableInstances;
+        private CompositeDisposable _compositeDisposable = new();
 
-        private readonly Dictionary<Type, Value> _registeredTypes = new();
-        // 同じインタフェースで別クラスを一度に登録したい場合など
-        private readonly Dictionary<Type, List<Value>> _multiRegisteredTypes = new();
-        
-        private readonly HashSet<object> _selfDestructibleClasses = new();
-        
-        // EntryPointで登録されたオブジェクトが管理されている
-        private readonly List<IInitializable> _initializableClasses = new();
-        public IReadOnlyList<IInitializable> InitializableClassClasses => _initializableClasses;
-        
-        private readonly List<IUpdatable> _updatableClasses = new();
-        public IReadOnlyList<IUpdatable> UpdatableClasses =>  _updatableClasses;
-        
-        private CompositeDisposable _compositeDisposable = new ();
+        public IReadOnlyList<IInitializable> InitializableClasses => _instanceStorage.InitializableClasses;
+        public IReadOnlyList<IUpdatable> UpdatableClasses => _instanceStorage.UpdatableClasses;
         
         public ScopedContainer(RegistrationRegistry registrationRegistry, ScopedContainer parentContainer = null)
         {
             _registrationRegistry = registrationRegistry;
             _parentContainer = parentContainer;
+            _instanceStorage = new InstanceStorage();
         }
 
         #region Resolve
@@ -77,11 +63,7 @@ namespace Shared.DI
         T IResolver.Resolve<T>()
             where T : class
         {
-            // if (typeof(T) == typeof(DependencyContextBase))
-            // {
-            //     return _dependencyContext as T;
-            // }
-            if (_multiRegisteredTypes.TryGetValue(typeof(T), out var values))
+            if (_instanceStorage.MultiRegisteredTypes.TryGetValue(typeof(T), out var values))
             {
                 foreach (var value in values)
                 {
@@ -91,7 +73,7 @@ namespace Shared.DI
                     }
                 }
             }
-            if (_registeredTypes.TryGetValue(typeof(T), out var instance))
+            if (_instanceStorage.RegisteredTypes.TryGetValue(typeof(T), out var instance))
             {
                 return ResolveInstance(instance) as T;
             }
@@ -105,11 +87,7 @@ namespace Shared.DI
 
         object IResolver.Resolve(Type type)
         {
-            // if (type == typeof(DependencyContextBase))
-            // {
-            //     return _dependencyContext;
-            // }
-            if (_multiRegisteredTypes.TryGetValue(type, out var values))
+            if (_instanceStorage.MultiRegisteredTypes.TryGetValue(type, out var values))
             {
                 foreach (var value in values)
                 {
@@ -119,7 +97,7 @@ namespace Shared.DI
                     }
                 }
             }
-            if (_registeredTypes.TryGetValue(type, out var instance))
+            if (_instanceStorage.RegisteredTypes.TryGetValue(type, out var instance))
             {
                 return ResolveInstance(instance);
             }
@@ -176,11 +154,17 @@ namespace Shared.DI
         {
             if (instance is SelfDestructibleBaseClass selfDestructibleClass)
             {
-                _selfDestructibleClasses.Add(instance);
-                selfDestructibleClass.DestroyAsObservable
-                    .Take(1)
-                    .Subscribe(obj => _selfDestructibleClasses.Remove(obj))
-                    .AddTo(_compositeDisposable);
+                if (_instanceStorage.AddSelfDestructibleClass(selfDestructibleClass))
+                {
+                    selfDestructibleClass.DestroyAsObservable
+                        .Take(1)
+                        .Subscribe(obj => _instanceStorage.RemoveSelfDestructibleClass(obj))
+                        .AddTo(_compositeDisposable);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"すでに{instance.GetType()}が登録されています");
+                }
             }
         }
         
@@ -196,28 +180,28 @@ namespace Shared.DI
             {
                 if (instance is IInitializable initializable)
                 {
-                    _initializableClasses.Add(initializable);
+                    _instanceStorage.AddInitializableClass(initializable);
                 }
                 if (instance is IUpdatable updatable)
                 {
-                    _updatableClasses.Add(updatable);
+                    _instanceStorage.AddUpdatableClass(updatable);
                 }
             }
         }
 
         void IRegister.Register<TInterface, TClass>(Lifetime lifetime)
         {
-            if (_registeredTypes.TryGetValue(typeof(TInterface), out var value))
+            if (_instanceStorage.AddRegisteredType(typeof(TInterface), new Value(lifetime, typeof(TClass))))
             {
-                throw new InvalidOperationException($"すでに{typeof(TInterface)}が登録されています");
+                _registrationRegistry.Register<TClass>(lifetime);
+                return;
             }
-            _registeredTypes.Add(typeof(TInterface), new Value(lifetime, typeof(TClass)));
-            _registrationRegistry.Register<TClass>(lifetime);
+            throw new InvalidOperationException($"すでに{typeof(TInterface)}が登録されています");
         }
 
         void IRegister.Register<TClass>(Lifetime lifetime)
         {
-            if (_registeredTypes.TryAdd(typeof(TClass), new Value(lifetime, typeof(TClass))))
+            if (_instanceStorage.AddRegisteredType(typeof(TClass), new Value(lifetime, typeof(TClass))))
             {
                 _registrationRegistry.Register<TClass>(lifetime);
                 return;
@@ -227,7 +211,7 @@ namespace Shared.DI
 
         void IRegister.RegisterEntryPoint<TClass>(Lifetime lifetime)
         {
-            if (_registeredTypes.TryAdd(typeof(TClass),  new Value(lifetime, typeof(TClass))))
+            if (_instanceStorage.AddRegisteredType(typeof(TClass),  new Value(lifetime, typeof(TClass))))
             {
                 _registrationRegistry.RegisterEntryPoint<TClass>(lifetime);
                 return;
@@ -237,28 +221,27 @@ namespace Shared.DI
 
         void IRegister.RegisterComponent<TClass>(TClass instance)
         {
-            var type = instance.GetType();
-            _registeredTypes[type] = new Value(Lifetime.Singleton, type,  instance);
+            if (_instanceStorage.AddRegisterComponent(instance))
+            {
+                return;
+            }
+            throw new InvalidOperationException($"すでに{typeof(TClass)}が登録されています");
         }
 
         public void RegisterComponent<TClass>(TClass instance, Type type) where TClass : MonoBehaviour
         {
-            _registeredTypes[type] = new Value(Lifetime.Singleton, type,  instance);
+            if (_instanceStorage.AddRegisterComponent(instance, type))
+            {
+                return;
+            }
+            throw new InvalidOperationException($"すでに{typeof(TClass)}が登録されています");
         }
 
         #endregion
 
         void IDisposable.Dispose()
         {
-            foreach (var disposable in _disposableInstances)
-            {
-                disposable.Dispose();
-            }
-            _disposableInstances.Clear();
-            _registeredTypes.Clear();
-            _multiRegisteredTypes.Clear();
-            _initializableClasses.Clear();
-            _updatableClasses.Clear();
+            ((IDisposable)_instanceStorage).Dispose();
         }
     }
 }

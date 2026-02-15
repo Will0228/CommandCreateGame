@@ -94,7 +94,7 @@ namespace Shared.DependencyContext
             OnRegister();
             _register.WarmUp();
             
-            foreach (var initializable in _container.InitializableClassClasses)
+            foreach (var initializable in _container.InitializableClasses)
             {
                 initializable.ManualInitialize();
             }
