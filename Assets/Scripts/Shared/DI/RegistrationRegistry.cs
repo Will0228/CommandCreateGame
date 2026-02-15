@@ -25,7 +25,7 @@ namespace Shared.DI
         private readonly Dictionary<Type, Func<IResolver, object>> _compiledFactories = new();
         private readonly Dictionary<Type, Action<object, IResolver>> _compiledInjectors = new();
         
-        public void Register<TClass>() where TClass : class
+        public void Register<TClass>(Lifetime lifetime) where TClass : class
         {
             if (!_compiledFactories.ContainsKey(typeof(TClass)))
             {
@@ -33,7 +33,7 @@ namespace Shared.DI
             }
         }
         
-        public void Register(Type classType)
+        public void Register(Type classType, Lifetime lifetime)
         {
             if (!_compiledFactories.ContainsKey(classType))
             {
@@ -41,7 +41,7 @@ namespace Shared.DI
             }
         }
 
-        public void RegisterEntryPoint<TClass>() where TClass : class
+        public void RegisterEntryPoint<TClass>(Lifetime lifetime) where TClass : class
         {
             _entryPointRegistryTypes.Add(typeof(TClass));
         }
@@ -52,25 +52,24 @@ namespace Shared.DI
         /// </summary>
         /// <param name="resolver"></param>
         /// <returns>EntryPointで登録されたインスタンス</returns>
-        /// <returns>SelfDestrucで登録されたインスタンス</returns>
-        public (IReadOnlyList<Object> entryPointInstances, IReadOnlyList<SelfDestructibleBaseClass> selfDestructibleInstances) WarmUp(IResolver resolver)
+        public IReadOnlyList<Object> WarmUp(IResolver resolver)
         {
             foreach (var type in _registryTypes)
             {
                 CompileSettings(type);
             }
             
-            var instances = new List<Object>();
+            var entryPointInstances = new List<Object>();
             foreach (var type in _entryPointRegistryTypes)
             {
                 CompileSettings(type);
-                instances.Add(ResolveInternal(type,  resolver));
+                entryPointInstances.Add(ResolveInternal(type,  resolver));
             }
             
             _registryTypes.Clear();
             _entryPointRegistryTypes.Clear();
             
-            return instances;
+            return entryPointInstances;
         }
         
         private void CompileSettings(Type concreateType)

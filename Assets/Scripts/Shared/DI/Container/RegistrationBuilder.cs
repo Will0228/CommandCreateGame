@@ -32,7 +32,7 @@ namespace Shared.DI
                 }
                 throw new InvalidOperationException($"すでに{type}が登録されています");
             }
-            _registrationRegistry.Register(_implementationType);
+            _registrationRegistry.Register(_implementationType,  _lifetime);
             return this;
         }
 

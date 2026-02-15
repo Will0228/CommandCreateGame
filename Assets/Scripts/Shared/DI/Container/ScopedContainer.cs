@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using R3;
 using Root.DI;
 using Root.EntryPointInterface;
 using Shared.DependencyContext;
+using UnityEngine;
+using Object = System.Object;
 
 namespace Shared.DI
 {
@@ -52,6 +55,8 @@ namespace Shared.DI
         // 同じインタフェースで別クラスを一度に登録したい場合など
         private readonly Dictionary<Type, List<Value>> _multiRegisteredTypes = new();
         
+        private readonly HashSet<object> _selfDestructibleClasses = new();
+        
         // EntryPointで登録されたオブジェクトが管理されている
         private readonly List<IInitializable> _initializableClasses = new();
         public IReadOnlyList<IInitializable> InitializableClassClasses => _initializableClasses;
@@ -59,9 +64,12 @@ namespace Shared.DI
         private readonly List<IUpdatable> _updatableClasses = new();
         public IReadOnlyList<IUpdatable> UpdatableClasses =>  _updatableClasses;
         
-        public ScopedContainer(RegistrationRegistry registrationRegistry)
+        private CompositeDisposable _compositeDisposable = new ();
+        
+        public ScopedContainer(RegistrationRegistry registrationRegistry, ScopedContainer parentContainer = null)
         {
             _registrationRegistry = registrationRegistry;
+            _parentContainer = parentContainer;
         }
 
         #region Resolve
@@ -69,10 +77,10 @@ namespace Shared.DI
         T IResolver.Resolve<T>()
             where T : class
         {
-            if (typeof(T) == typeof(DependencyContextBase))
-            {
-                return _dependencyContext as T;
-            }
+            // if (typeof(T) == typeof(DependencyContextBase))
+            // {
+            //     return _dependencyContext as T;
+            // }
             if (_multiRegisteredTypes.TryGetValue(typeof(T), out var values))
             {
                 foreach (var value in values)
@@ -97,10 +105,10 @@ namespace Shared.DI
 
         object IResolver.Resolve(Type type)
         {
-            if (type == typeof(DependencyContextBase))
-            {
-                return _dependencyContext;
-            }
+            // if (type == typeof(DependencyContextBase))
+            // {
+            //     return _dependencyContext;
+            // }
             if (_multiRegisteredTypes.TryGetValue(type, out var values))
             {
                 foreach (var value in values)
@@ -153,7 +161,8 @@ namespace Shared.DI
             }
                 
             var instance = _registrationRegistry.ResolveInstance(value.ConcreteType, this);
-
+            CheckSelfDestructibleClass(instance);
+            
             // もしシングルトンの場合はインスタンスを保存
             if (value.Lifetime == Lifetime.Singleton)
             {
@@ -161,6 +170,18 @@ namespace Shared.DI
             }
             
             return instance;
+        }
+
+        private void CheckSelfDestructibleClass(Object instance)
+        {
+            if (instance is SelfDestructibleBaseClass selfDestructibleClass)
+            {
+                _selfDestructibleClasses.Add(instance);
+                selfDestructibleClass.DestroyAsObservable
+                    .Take(1)
+                    .Subscribe(obj => _selfDestructibleClasses.Remove(obj))
+                    .AddTo(_compositeDisposable);
+            }
         }
         
         #endregion
@@ -191,14 +212,14 @@ namespace Shared.DI
                 throw new InvalidOperationException($"すでに{typeof(TInterface)}が登録されています");
             }
             _registeredTypes.Add(typeof(TInterface), new Value(lifetime, typeof(TClass)));
-            _registrationRegistry.Register<TClass>();
+            _registrationRegistry.Register<TClass>(lifetime);
         }
 
         void IRegister.Register<TClass>(Lifetime lifetime)
         {
             if (_registeredTypes.TryAdd(typeof(TClass), new Value(lifetime, typeof(TClass))))
             {
-                _registrationRegistry.Register<TClass>();
+                _registrationRegistry.Register<TClass>(lifetime);
                 return;
             }
             throw new InvalidOperationException($"すでに{typeof(TClass)}が登録されています");
@@ -208,7 +229,7 @@ namespace Shared.DI
         {
             if (_registeredTypes.TryAdd(typeof(TClass),  new Value(lifetime, typeof(TClass))))
             {
-                _registrationRegistry.RegisterEntryPoint<TClass>();
+                _registrationRegistry.RegisterEntryPoint<TClass>(lifetime);
                 return;
             }
             throw new InvalidOperationException($"すでに{typeof(TClass)}が登録されています");
@@ -220,14 +241,24 @@ namespace Shared.DI
             _registeredTypes[type] = new Value(Lifetime.Singleton, type,  instance);
         }
 
+        public void RegisterComponent<TClass>(TClass instance, Type type) where TClass : MonoBehaviour
+        {
+            _registeredTypes[type] = new Value(Lifetime.Singleton, type,  instance);
+        }
+
         #endregion
 
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             foreach (var disposable in _disposableInstances)
             {
                 disposable.Dispose();
             }
+            _disposableInstances.Clear();
+            _registeredTypes.Clear();
+            _multiRegisteredTypes.Clear();
+            _initializableClasses.Clear();
+            _updatableClasses.Clear();
         }
     }
 }

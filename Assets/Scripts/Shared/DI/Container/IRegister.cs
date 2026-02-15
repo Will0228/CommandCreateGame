@@ -1,3 +1,4 @@
+using System;
 using Shared.DependencyContext;
 using UnityEngine;
 
@@ -13,6 +14,7 @@ namespace Shared.DI
         void Register<TClass>(Lifetime lifetime) where TClass : class;
         void RegisterEntryPoint<TClass>(Lifetime lifetime) where TClass : class;
         void RegisterComponent<TClass>(TClass instance) where TClass : MonoBehaviour;
+        void RegisterComponent<TClass>(TClass instance, Type type) where TClass : MonoBehaviour;
         // RegistrationBuilder Register<TClass>(Lifetime lifetime) where TClass : class;
     }
 }
