@@ -48,7 +48,9 @@ namespace Application.Base
         /// <summary>
         /// ステートを抜けるときに呼ばれるメソッド
         /// </summary>
+#pragma warning disable CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
         public virtual async UniTask ExitAsync(){}
+#pragma warning restore CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
 
         /// <summary>
         /// 購読処理を共通化

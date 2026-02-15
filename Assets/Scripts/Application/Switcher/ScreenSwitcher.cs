@@ -32,7 +32,9 @@ namespace Application.Switcher
             _stateSwitcher = resolver.Resolve<IStateSwitcher>();
         }
         
+#pragma warning disable CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
         public async UniTaskVoid SetNextScreenAsync(IScreen nextScreen)
+#pragma warning restore CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
         {
             ResetCancellationTokenSource();
             
@@ -41,7 +43,9 @@ namespace Application.Switcher
             NextScreenSettingsAsync(nextScreen).Forget();
         }
 
+#pragma warning disable CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
         public async UniTaskVoid SetFirstScreenAsync(IScreen nextScreen) => NextScreenSettingsAsync(nextScreen).Forget(); 
+#pragma warning restore CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
         
 
         private async UniTask NextScreenSettingsAsync(IScreen nextScreen)

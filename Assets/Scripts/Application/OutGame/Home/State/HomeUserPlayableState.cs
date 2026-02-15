@@ -29,10 +29,9 @@ namespace Application.Home
 
         protected override void Bind(){}
 
-        protected override async UniTask ConfigureAsync(CancellationToken token)
-        {
-            
-        }
+#pragma warning disable CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
+        protected override async UniTask ConfigureAsync(CancellationToken token){}
+#pragma warning restore CS1998 // 非同期メソッドは、'await' 演算子がないため、同期的に実行されます
 
         public override void Dispose()
         {
