@@ -21,21 +21,19 @@ namespace Shared.DependencyContext
         [HideInInspector] 
         [SerializeField] private string _typeName;
         
-        // private DIContainer _container;
         private ScopedContainer _container;
         private IRegister _register => _container;
         private IResolver _resolver => _container;
-        
-        // SetParentで親スコープを定義するためにstaticにしている
-        private static DependencyContextBase _parentDependencyContext;
 
         // このDependencyContextで登録したType
         // 実際にインスタンスを作成するときはレシピから行うが、レシピには別のDependencyContextで登録したクラスも含まれるので
         // このDependencyContextに含まれているかどうかで判断する必要がある（登録していないのに依存注入できた、というケースが存在するため）
         // FIXME
         // 親DependencyContextで既に登録されていないかを、登録時にバリデチェックする必要はある
-        private HashSet<Type> _registeredTypes = new HashSet<Type>();
-        private readonly Dictionary<Type, InstanceRegistration> _instances = new();
+        // private HashSet<Type> _registeredTypes = new HashSet<Type>();
+        // private readonly Dictionary<Type, InstanceRegistration> _instances = new();
+
+        private static ScopedContainer _cachedParentContainer;
 
         public IResolver Resolver
         {
@@ -57,7 +55,7 @@ namespace Shared.DependencyContext
         // 親スコープを設定する
         public static IDisposable SetParent(DependencyContextBase parent)
         {
-            _parentDependencyContext = parent;
+            _cachedParentContainer = parent._container;
             return new ScopeClearer();
         }
         
@@ -71,7 +69,7 @@ namespace Shared.DependencyContext
                 var parentType = Type.GetType(_typeName);
                 if (parentType != null && _cachedInstances.TryGetValue(parentType, out var parentInstance))
                 {
-                    _parentDependencyContext = parentInstance;
+                    _cachedParentContainer = parentInstance._container;
                 }
             }
             
@@ -91,8 +89,9 @@ namespace Shared.DependencyContext
                 return;
             }
 
-            _container = new ScopedContainer(DIInitializer.RegistrationRegistry);
-            OnRegister(_container);
+            _container = new ScopedContainer(DIInitializer.RegistrationRegistry, _cachedParentContainer);
+            _cachedParentContainer = null;
+            OnRegister();
             _register.WarmUp();
             
             foreach (var initializable in _container.InitializableClassClasses)
@@ -109,19 +108,32 @@ namespace Shared.DependencyContext
             }
         }
 
-        protected abstract void OnRegister(IRegister register);
+        private void OnRegister()
+        {
+            PreRegisterInternal();
+            OnRegister(_register);
+        }
+
+        private void PreRegisterInternal()
+        {
+            _register.RegisterComponent(this, typeof(DependencyContextBase));
+        }
+
+        protected virtual void OnRegister(IRegister register){}
 
         protected virtual void OnDestroy()
         {
-            if (_cachedInstances.TryGetValue(this.GetType(), out var instance))
+            if (_cachedInstances.TryGetValue(GetType(), out var instance))
             {
-                _cachedInstances.Remove(this.GetType());
+                _cachedInstances.Remove(GetType());
             }
+            
+            ((IDisposable)_container).Dispose();
         }
 
         private class ScopeClearer : IDisposable
         {
-            public void Dispose(){}
+            public void Dispose() {}
         }
     }
 }
