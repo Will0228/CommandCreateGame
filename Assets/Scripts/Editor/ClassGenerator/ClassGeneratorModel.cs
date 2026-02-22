@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -6,19 +7,62 @@ using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
+    internal enum LayerType
+    {
+        None,
+        
+        // プレゼンテーション層
+        Presenter,
+        View,
+        
+        // アプリケーション層
+        UseCase,
+        Service,
+        
+        // ドメイン層
+        Entity,
+        ValueObject,
+        DataTransferObject,
+        RepositoryInterface,
+        
+        // インフラ層
+        RepositoryImplementation,
+    }
+    
     internal sealed class ClassGeneratorModel
     {
+        [Serializable]
+        internal class LayerSettings
+        {
+            internal string Label;
+            internal readonly List<string> ClassNames = new();
+            internal string Suffix;
+            internal LayerType Type;
+            
+            public LayerSettings(LayerType type, string label, string suffix)
+            {
+                Type = type;
+                Label = label;
+                Suffix = suffix;
+            }
+        }
+        
         public string NamespaceName = "YourProject.Domain";
-        public readonly Dictionary<string, List<ClassGeneratorWindow.LayerSettings>> Layers;
+        
+        private readonly Dictionary<string, List<LayerSettings>> _layers;
+        public IReadOnlyDictionary<string, List<LayerSettings>> Layers => _layers;
+
+        private readonly Dictionary<LayerType, bool> _isGeneratedClassDict = new();
+        public bool IsExistGeneratedClass(LayerType layerType) => _isGeneratedClassDict[layerType];
 
         public ClassGeneratorModel()
         {
-            Layers = new Dictionary<string, List<ClassGeneratorWindow.LayerSettings>>
+            _layers = new Dictionary<string, List<LayerSettings>>
             {
-                { "Presentation", new List<ClassGeneratorWindow.LayerSettings> { new("Presenter", "Presenter"), new("View", "View") } },
-                { "Application", new List<ClassGeneratorWindow.LayerSettings> { new("UseCase", "UseCase"), new("Service", "Service") } },
-                { "Domain", new List<ClassGeneratorWindow.LayerSettings> { new("Entity", ""), new("ValueObject", ""), new("Repository Interface", "Repository") } },
-                { "Infrastructure", new List<ClassGeneratorWindow.LayerSettings> { new("DataModel", "DataModel"), new("Repository Impl", "Repository") } }
+                { "Presentation", new List<LayerSettings> { new(LayerType.Presenter, "Presenter", "Presenter"), new(LayerType.View, "View", "View") } },
+                { "Application", new List<LayerSettings> { new(LayerType.UseCase, "UseCase", "UseCase"), new(LayerType.Service, "Service", "Service") } },
+                { "Domain", new List<LayerSettings> { new(LayerType.Entity, "Entity", "Entity"), new(LayerType.ValueObject, "ValueObject", "Vo"), new(LayerType.DataTransferObject, "DataTransferObject", "Dto"), new(LayerType.RepositoryInterface, "Repository Interface", "Repository") } },
+                { "Infrastructure", new List<LayerSettings> { new(LayerType.RepositoryImplementation, "Repository Impl", "Repository") } }
             };
         }
         
@@ -27,27 +71,35 @@ namespace Editor.ClassGenerator
             if (string.IsNullOrEmpty(outputPath)) return;
 
             int count = 0;
-            foreach (var layer in Layers.Values)
+            foreach (LayerType type in Enum.GetValues(typeof(LayerType)))
             {
-                foreach (var setting in layer)
+                if (type == LayerType.None || !_isGeneratedClassDict[type])
                 {
-                    if (!setting.IsEnabled) continue;
-                    foreach (var name in setting.ClassNames)
+                    continue;
+                }
+                
+                
+                foreach (var layer in _layers.Values)
+                {
+                    foreach (var setting in layer)
                     {
-                        if (string.IsNullOrWhiteSpace(name)) continue;
-                    
-                        string fullClassName = name + setting.Suffix;
-                        string filePath = Path.Combine(outputPath, fullClassName + ".cs");
-                    
-                        if (File.Exists(filePath)) continue;
+                        foreach (var name in setting.ClassNames)
+                        {
+                            if (string.IsNullOrWhiteSpace(name)) continue;
+                        
+                            string fullClassName = name + setting.Suffix;
+                            string filePath = Path.Combine(outputPath, fullClassName + ".cs");
+                        
+                            if (File.Exists(filePath)) continue;
 
-                        File.WriteAllText(filePath, GetTemplate(fullClassName, setting.Label));
-                        count++;
+                            File.WriteAllText(filePath, GetTemplate(fullClassName, setting.Label));
+                            count++;
+                        }
                     }
                 }
+                AssetDatabase.Refresh();
+                Debug.Log($"[Class Generator] {count} classes created at {outputPath}");
             }
-            AssetDatabase.Refresh();
-            Debug.Log($"[DDD Generator] {count} classes created at {outputPath}");
         }
         
         private string GetTemplate(string className, string layer)
