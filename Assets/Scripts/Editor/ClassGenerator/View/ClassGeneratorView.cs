@@ -14,32 +14,34 @@ namespace Editor.ClassGenerator
 
         private readonly Subject<Unit> _onGenerateRequestedSubject = new();
         public Observable<Unit> OnGenerateRequestedAsObservable => _onGenerateRequestedSubject;
+        
+        
 
         public void Draw(Rect windowPosition, 
-            IReadOnlyDictionary<string, List<LayerSettings>> layers,
+            IReadOnlyDictionary<AppLayerType, List<LayerSettings>> layers,
             string nameSpace)
         {
             DrawToolbar(nameSpace);
 
-            float halfWidth = windowPosition.width / 2f - 2f;
-            float halfHeight = (windowPosition.height - 35f) / 2f;
+            var halfWidth = windowPosition.width / 2f - 2f;
+            var halfHeight = (windowPosition.height - 35f) / 2f;
 
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
             // 上段プレゼンテーション層とアプリケーション層を実装
             EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
-            DrawLayerArea("Presentation", layers["Presentation"], halfWidth);
+            DrawLayerArea("Presentation", layers[AppLayerType.Presentation], halfWidth);
             DrawVerticalLine();
-            DrawLayerArea("Application", layers["Application"], halfWidth);
+            DrawLayerArea("Application", layers[AppLayerType.Application], halfWidth);
             EditorGUILayout.EndHorizontal();
 
             DrawHorizontalLine();
 
             // 下段ドメイン層とインフラ層を実装
             EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
-            DrawLayerArea("Domain", layers["Domain"], halfWidth);
+            DrawLayerArea("Domain", layers[AppLayerType.Domain], halfWidth);
             DrawVerticalLine();
-            DrawLayerArea("Infrastructure", layers["Infrastructure"], halfWidth);
+            DrawLayerArea("Infrastructure", layers[AppLayerType.Infrastructure], halfWidth);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndScrollView();

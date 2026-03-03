@@ -2,19 +2,19 @@ namespace Editor.ClassGenerator
 {
     internal static class LayerTypeExtension
     {
-        internal static string GetName(this LayerType type)
+        internal static string GetName(this ComponentRoleType type)
         {
             return type switch
             {
-                LayerType.Presenter => "Presenter",
-                LayerType.View   => "View",
-                LayerType.UseCase   => "UseCase",
-                LayerType.Service   => "Service",
-                LayerType.Entity   => "Entity",
-                LayerType.ValueObject  => "Value Object",
-                LayerType.DataTransferObject  => "Data Transfer Object",
-                LayerType.RepositoryInterface  => "Repository Interface",
-                LayerType.RepositoryImplementation  => "Repository Impl",
+                ComponentRoleType.Presenter => "Presenter",
+                ComponentRoleType.View   => "View",
+                ComponentRoleType.UseCase   => "UseCase",
+                ComponentRoleType.Service   => "Service",
+                ComponentRoleType.Entity   => "Entity",
+                ComponentRoleType.ValueObject  => "Value Object",
+                ComponentRoleType.DataTransferObject  => "Data Transfer Object",
+                ComponentRoleType.RepositoryInterface  => "Repository Interface",
+                ComponentRoleType.RepositoryImplementation  => "Repository Impl",
                 _ => "Unknown"
             };
         }

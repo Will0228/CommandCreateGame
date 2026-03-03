@@ -7,7 +7,16 @@ using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
-    internal enum LayerType
+    internal enum AppLayerType
+    {
+        None,
+        Presentation, // プレゼンテーション層
+        Application, // アプリケーション層
+        Domain, // ドメイン層
+        Infrastructure, // インフラ層
+    }
+    
+    internal enum ComponentRoleType
     {
         None,
         
@@ -37,9 +46,9 @@ namespace Editor.ClassGenerator
             internal string Label;
             internal readonly List<string> ClassNames = new();
             internal string Suffix;
-            internal LayerType Type;
+            internal ComponentRoleType Type;
             
-            public LayerSettings(LayerType type, string label, string suffix)
+            public LayerSettings(ComponentRoleType type, string label, string suffix)
             {
                 Type = type;
                 Label = label;
@@ -49,20 +58,20 @@ namespace Editor.ClassGenerator
         
         public string NamespaceName = "YourProject.Domain";
         
-        private readonly Dictionary<string, List<LayerSettings>> _layers;
-        public IReadOnlyDictionary<string, List<LayerSettings>> Layers => _layers;
+        private readonly Dictionary<AppLayerType, List<LayerSettings>> _layers;
+        public IReadOnlyDictionary<AppLayerType, List<LayerSettings>> Layers => _layers;
 
-        private readonly Dictionary<LayerType, bool> _isGeneratedClassDict = new();
-        public bool IsExistGeneratedClass(LayerType layerType) => _isGeneratedClassDict[layerType];
+        private readonly Dictionary<ComponentRoleType, bool> _isGeneratedClassDict = new();
+        public bool IsExistGeneratedClass(ComponentRoleType componentRoleType) => _isGeneratedClassDict[componentRoleType];
 
         public ClassGeneratorModel()
         {
-            _layers = new Dictionary<string, List<LayerSettings>>
+            _layers = new Dictionary<AppLayerType, List<LayerSettings>>
             {
-                { "Presentation", new List<LayerSettings> { new(LayerType.Presenter, "Presenter", "Presenter"), new(LayerType.View, "View", "View") } },
-                { "Application", new List<LayerSettings> { new(LayerType.UseCase, "UseCase", "UseCase"), new(LayerType.Service, "Service", "Service") } },
-                { "Domain", new List<LayerSettings> { new(LayerType.Entity, "Entity", "Entity"), new(LayerType.ValueObject, "ValueObject", "Vo"), new(LayerType.DataTransferObject, "DataTransferObject", "Dto"), new(LayerType.RepositoryInterface, "Repository Interface", "Repository") } },
-                { "Infrastructure", new List<LayerSettings> { new(LayerType.RepositoryImplementation, "Repository Impl", "Repository") } }
+                { AppLayerType.Presentation, new List<LayerSettings> { new(ComponentRoleType.Presenter, "Presenter", "Presenter"), new(ComponentRoleType.View, "View", "View") } },
+                { AppLayerType.Application, new List<LayerSettings> { new(ComponentRoleType.UseCase, "UseCase", "UseCase"), new(ComponentRoleType.Service, "Service", "Service") } },
+                { AppLayerType.Domain, new List<LayerSettings> { new(ComponentRoleType.Entity, "Entity", "Entity"), new(ComponentRoleType.ValueObject, "ValueObject", "Vo"), new(ComponentRoleType.DataTransferObject, "DataTransferObject", "Dto"), new(ComponentRoleType.RepositoryInterface, "Repository Interface", "Repository") } },
+                { AppLayerType.Infrastructure, new List<LayerSettings> { new(ComponentRoleType.RepositoryImplementation, "Repository Impl", "Repository") } }
             };
         }
         
@@ -71,9 +80,9 @@ namespace Editor.ClassGenerator
             if (string.IsNullOrEmpty(outputPath)) return;
 
             int count = 0;
-            foreach (LayerType type in Enum.GetValues(typeof(LayerType)))
+            foreach (ComponentRoleType type in Enum.GetValues(typeof(ComponentRoleType)))
             {
-                if (type == LayerType.None || !_isGeneratedClassDict[type])
+                if (type == ComponentRoleType.None || !_isGeneratedClassDict[type])
                 {
                     continue;
                 }
