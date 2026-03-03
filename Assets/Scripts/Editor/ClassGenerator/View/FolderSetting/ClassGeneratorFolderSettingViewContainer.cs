@@ -11,6 +11,9 @@ namespace Editor.ClassGenerator
         private readonly ClassGeneratorFolderSettingFolderPathView _folderPathView;
         private readonly ClassGeneratorFolderSettingLayerView _layerView;
         
+        public Observable<int> OnFolderButtonClickedAsObservable => _folderPathView.OnFolderButtonClickedAsObservable;
+        public Observable<AppLayerType> OnLayerButtonClickedAsObservable => _layerView.OnLayerButtonClickedAsObservable;
+
         public ClassGeneratorFolderSettingViewContainer()
         {
             _folderPathView = new ClassGeneratorFolderSettingFolderPathView();
@@ -24,20 +27,20 @@ namespace Editor.ClassGenerator
         
         internal void Draw(Rect windowPosition,
             IReadOnlyDictionary<AppLayerType, string> layerPathDict,
-            IReadOnlyDictionary<string, int> folderPathDict)
+            IReadOnlyList<ClassGeneratorFolderSettingPathDto> pathDtos)
         {
             var halfWidth = windowPosition.width / 2f - 2f;
             
             EditorGUILayout.BeginHorizontal();
             _layerView.Draw(layerPathDict, halfWidth);
-            _folderPathView.Draw(folderPathDict);
+            _folderPathView.Draw(pathDtos);
             EditorGUILayout.EndHorizontal();
         }
         
         
         void IDisposable.Dispose()
         {
-            
+            ((IDisposable)_folderPathView).Dispose();
         }
     }
 }

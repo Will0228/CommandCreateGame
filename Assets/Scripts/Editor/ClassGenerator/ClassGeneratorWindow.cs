@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -36,7 +37,11 @@ namespace Editor.ClassGenerator
             _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter(_folderSettingViewContainer, _folderSettingModel);
         }
         
-        private void OnDisable() => _presenter.Dispose();
+        private void OnDisable()
+        {
+            _presenter.Dispose();
+            ((IDisposable)_folderSettingPresenter).Dispose();
+        }
 
         private void OnGUI()
         {

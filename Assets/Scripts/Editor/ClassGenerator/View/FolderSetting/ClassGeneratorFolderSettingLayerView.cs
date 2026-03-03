@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using R3;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,6 +8,9 @@ namespace Editor.ClassGenerator
     internal sealed class ClassGeneratorFolderSettingLayerView
     {
         private AppLayerType _selectedLayer = AppLayerType.None;
+        
+        private readonly Subject<AppLayerType> _onLayerButtonClickedSubject = new();
+        public Observable<AppLayerType> OnLayerButtonClickedAsObservable => _onLayerButtonClickedSubject;
         
         internal void Draw(IReadOnlyDictionary<AppLayerType, string> layerPathDict,
             float sectionRectWidth)
@@ -32,10 +36,10 @@ namespace Editor.ClassGenerator
                     }
                     
                     EditorGUILayout.LabelField($"{dict.Key} Layer", GUILayout.Width(120));
-                    var buttonLabel = dict.Value;
-                    if (GUILayout.Button(buttonLabel, GUILayout.Width(80)))
+                    if (GUILayout.Button(dict.Value))
                     {
                         _selectedLayer = dict.Key;
+                        _onLayerButtonClickedSubject.OnNext(_selectedLayer);
                     }
                 }
                 EditorGUILayout.EndHorizontal();

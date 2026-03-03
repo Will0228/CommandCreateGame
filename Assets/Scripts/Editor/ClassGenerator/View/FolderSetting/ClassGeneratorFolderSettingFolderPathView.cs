@@ -1,22 +1,28 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using R3;
 using UnityEditor;
 using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorFolderSettingFolderPathView
+    internal sealed class ClassGeneratorFolderSettingFolderPathView : IDisposable
     {
         private const int FOLDER_INDENT_SIZE = 20;
         private const int FOLDER_ROW_HEIGHT = 25;
         private readonly Color TREE_COLOR = new(0.4f, 0.4f, 0.4f, 1f);
         
         private Vector2 _scrollPosition;
+        
+        private readonly Subject<int> _onFolderButtonClickedSubject = new();
+        public Observable<int> OnFolderButtonClickedAsObservable => _onFolderButtonClickedSubject;
 
-        internal void Draw(IReadOnlyDictionary<string, int> folderPathDict)
+        internal void Draw(IReadOnlyList<ClassGeneratorFolderSettingPathDto> dtos)
         {
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
             {
-                if (folderPathDict == null || folderPathDict.Count == 0)
+                if (dtos == null || dtos.Count == 0)
                 {
                     EditorGUILayout.HelpBox("No data available.", MessageType.Info);
                     return;
@@ -27,30 +33,30 @@ namespace Editor.ClassGenerator
                     var parentFolderCount = new Dictionary<int, int>();
                     var currentDepth = 1;
                     
-                    foreach (var kvp in folderPathDict)
+                    for(int i = 0; i < dtos.Count; i++)
                     {
-                        var path = kvp.Key;
-                        var depth = kvp.Value;
+                        var path = dtos[i].Info.Path;
+                        var depth = dtos[i].Info.Depth;
 
                         // フォルダの階層が上に戻ったときに、今より下の階層のフォルダ個数をリセットする
                         if (currentDepth > depth)
                         {
-                            for (int i = depth + 1; i <= currentDepth; i++)
+                            for (int j = depth + 1; j <= currentDepth; j++)
                             {
-                                parentFolderCount[i] = 0;
+                                parentFolderCount[j] = 0;
                             }
                         }
                         currentDepth = depth;
                         
                         // 親のフォルダまでのいくつフォルダが存在するかを計算してツリー構造を描画するときに使用
-                        for (int i = 2; i <= depth; i++)
+                        for (int j = 2; j <= depth; j++)
                         {
                             // 該当のkeyが未初期化であれば初期化
-                            if (!parentFolderCount.TryGetValue(i, out var value))
+                            if (!parentFolderCount.TryGetValue(j, out var value))
                             {
-                                parentFolderCount[i] = 0;
+                                parentFolderCount[j] = 0;
                             }
-                            parentFolderCount[i]++;
+                            parentFolderCount[j]++;
                         }
 
                         EditorGUILayout.BeginHorizontal();
@@ -59,11 +65,14 @@ namespace Editor.ClassGenerator
                             {
                                 DrawTree(depth, parentFolderCount[depth]);
                             }
+
+                            var cleanPath = path.TrimEnd('/', '\\');
+                            var lastSegment = Path.GetFileName(cleanPath);
                             
                             // ボタン本体。クリックされたら true を返す
-                            if (GUILayout.Button(path, GUILayout.Height(FOLDER_ROW_HEIGHT), GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button(lastSegment, GUILayout.Height(FOLDER_ROW_HEIGHT), GUILayout.ExpandWidth(false)))
                             {
-                                // OnFolderButtonClicked(path);
+                                _onFolderButtonClickedSubject.OnNext(currentDepth);
                             }
                         }
                         EditorGUILayout.EndHorizontal();
@@ -90,6 +99,11 @@ namespace Editor.ClassGenerator
             // 縦線
             var height = (FOLDER_ROW_HEIGHT - 10) + (FOLDER_ROW_HEIGHT * (count - 1));
             EditorGUI.DrawRect(new Rect(centerX, centerY, 1f, -height), TREE_COLOR);
+        }
+
+        void IDisposable.Dispose()
+        {
+            _onFolderButtonClickedSubject?.Dispose();
         }
     }
 }

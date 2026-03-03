@@ -13,8 +13,11 @@ namespace Editor.ClassGenerator
         
         // valueはどこの階層にいるかを調べるために使用する
         // Viewの見た目を良くするためだけです
-        private readonly Dictionary<string, int> _folderPathDict = new();
-        public IReadOnlyDictionary<string, int> FolderPathDict => _folderPathDict;
+        private readonly List<ClassGeneratorFolderSettingPathInfo> _pathInfos = new();
+        public IReadOnlyList<ClassGeneratorFolderSettingPathInfo> PathInfos => _pathInfos;
+        
+        private AppLayerType _selectedLayerType;
+        public AppLayerType SelectedLayerType => _selectedLayerType;
         
         public ClassGeneratorFolderSettingModel()
         {
@@ -26,10 +29,13 @@ namespace Editor.ClassGenerator
             }
             RefreshFolderPaths();
         }
+        
+        internal void SetSelectedLayerType(AppLayerType layerType) => _selectedLayerType = layerType;
+        internal void SetFolderPath(int index) => _layerPathDict[_selectedLayerType] = _pathInfos[index].Path;
 
         private void RefreshFolderPaths()
         {
-            _folderPathDict.Clear();
+            _pathInfos.Clear();
             
             if (Directory.Exists(_absoluteBase))
             {
@@ -45,7 +51,7 @@ namespace Editor.ClassGenerator
             var relativePath = ToRelativePath(currentPath);
             if (!string.IsNullOrEmpty(relativePath))
             {
-                _folderPathDict.Add(relativePath, depth);
+                _pathInfos.Add(new ClassGeneratorFolderSettingPathInfo(relativePath, depth));
             }
 
             // 直下のサブディレクトリを取得
