@@ -1,77 +1,18 @@
-using System;
 using System.Collections.Generic;
-using R3;
 using UnityEditor;
 using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorFolderSettingView : IDisposable
+    internal sealed class ClassGeneratorFolderSettingFolderPathView
     {
         private const int FOLDER_INDENT_SIZE = 20;
         private const int FOLDER_ROW_HEIGHT = 25;
-        private Color32 TREE_COLOR = new Color(0.4f, 0.4f, 0.4f, 1f);
+        private readonly Color TREE_COLOR = new(0.4f, 0.4f, 0.4f, 1f);
         
         private Vector2 _scrollPosition;
-        private AppLayerType _selectedLayer = AppLayerType.None;
-        
-        private readonly Subject<(ComponentRoleType, string)> _onSetFolderPathSubject = new();
-        public Observable<(ComponentRoleType, string)> OnSetFolderPathAsObservable => _onSetFolderPathSubject;
-        
-        internal void Draw(Rect windowPosition,
-            IReadOnlyDictionary<AppLayerType, string> layerPathDict,
-            IReadOnlyDictionary<string, int> folderPathDict)
-        {
-            var halfWidth = windowPosition.width / 2f - 2f;
-            
-            EditorGUILayout.BeginHorizontal();
-            DrawFolderSettingAreaByAppLayer(layerPathDict, halfWidth);
-            DrawFolderPath(folderPathDict);
-            EditorGUILayout.EndHorizontal();
-        }
-        
-        /// <summary>
-        /// 層ごとのフォルダ設定項目を列挙
-        /// </summary>
-        private void DrawFolderSettingAreaByAppLayer(IReadOnlyDictionary<AppLayerType, string> layerPathDict,
-            float sectionRectWidth)
-        {
-            EditorGUILayout.BeginVertical();
-            
-            foreach (var dict in layerPathDict)
-            {
-                if (dict.Key == AppLayerType.None)
-                {
-                    continue;
-                }
-                
-                var sectionRect = EditorGUILayout.BeginHorizontal(EditorStyles.helpBox, GUILayout.Width(sectionRectWidth));
-                {
-                    // 選択されている場合の枠の強調表示
-                    if (_selectedLayer == dict.Key)
-                    {
-                        var originalColor = GUI.color;
-                        GUI.color = Color.yellow;
-                        GUI.Box(sectionRect, GUIContent.none, EditorStyles.selectionRect);
-                        GUI.color = originalColor;
-                    }
-                    
-                    EditorGUILayout.LabelField($"{dict.Key} Layer", GUILayout.Width(120));
-                    var buttonLabel = dict.Value;
-                    if (GUILayout.Button(buttonLabel, GUILayout.Width(80)))
-                    {
-                        _selectedLayer = dict.Key;
-                    }
-                }
-                EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.Space(10);
-            }
-            
-            EditorGUILayout.EndVertical();
-        }
-
-        private void DrawFolderPath(IReadOnlyDictionary<string, int> folderPathDict)
+        internal void Draw(IReadOnlyDictionary<string, int> folderPathDict)
         {
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
             {
@@ -133,7 +74,7 @@ namespace Editor.ClassGenerator
             }
             EditorGUILayout.EndScrollView();
         }
-
+        
         private void DrawTree(int depth, int count)
         {
             // ツリー線の描画エリア計算
@@ -149,11 +90,6 @@ namespace Editor.ClassGenerator
             // 縦線
             var height = (FOLDER_ROW_HEIGHT - 10) + (FOLDER_ROW_HEIGHT * (count - 1));
             EditorGUI.DrawRect(new Rect(centerX, centerY, 1f, -height), TREE_COLOR);
-        }
-        
-        void IDisposable.Dispose()
-        {
-            
         }
     }
 }

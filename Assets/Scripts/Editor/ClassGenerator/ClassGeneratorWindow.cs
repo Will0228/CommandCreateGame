@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +11,7 @@ namespace Editor.ClassGenerator
         
         private ClassGeneratorFolderSettingModel _folderSettingModel;
         private ClassGeneratorFolderSettingPresenter _folderSettingPresenter;
-        private ClassGeneratorFolderSettingView _folderSettingView;
+        private ClassGeneratorFolderSettingViewContainer _folderSettingViewContainer;
         
         // タブの状態管理
         private int _selectedTabIndex = 0;
@@ -34,8 +32,8 @@ namespace Editor.ClassGenerator
             _presenter = new ClassGeneratorPresenter(_model, _view);
 
             _folderSettingModel = new ClassGeneratorFolderSettingModel();
-            _folderSettingView = new ClassGeneratorFolderSettingView();
-            _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter(_folderSettingView, _folderSettingModel);
+            _folderSettingViewContainer = new ClassGeneratorFolderSettingViewContainer();
+            _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter(_folderSettingViewContainer, _folderSettingModel);
         }
         
         private void OnDisable() => _presenter.Dispose();
