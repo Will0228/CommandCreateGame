@@ -4,21 +4,22 @@ using R3;
 using UnityEngine;
 
 using ViewContainer = Editor.ClassGenerator.ClassGeneratorFolderSettingViewContainer;
-using Model = Editor.ClassGenerator.ClassGeneratorFolderSettingModel;
 
 namespace Editor.ClassGenerator
 {
     internal sealed class ClassGeneratorFolderSettingPresenter : IDisposable
     {
         private readonly ViewContainer _viewContainer;
-        private readonly Model _model;
+        private readonly ClassGeneratorFolderSettingLayerModel _layerModel;
+        private readonly ClassGeneratorFolderSettingPathModel _pathModel;
         
         private readonly CompositeDisposable _disposables = new();
         
-        internal ClassGeneratorFolderSettingPresenter(ViewContainer viewContainer, Model model)
+        internal ClassGeneratorFolderSettingPresenter()
         {
-            _viewContainer = viewContainer;
-            _model = model;
+            _viewContainer = new ClassGeneratorFolderSettingViewContainer();
+            _layerModel = new ClassGeneratorFolderSettingLayerModel();
+            _pathModel = new ClassGeneratorFolderSettingPathModel();
 
             Bind();
         }
@@ -26,16 +27,19 @@ namespace Editor.ClassGenerator
         private void Bind()
         {
             _viewContainer.OnLayerButtonClickedAsObservable
-                .Subscribe(_model.SetSelectedLayerType)
+                .Subscribe(_layerModel.SetSelectedLayerType)
                 .AddTo(_disposables);
             
             _viewContainer.OnFolderButtonClickedAsObservable
-                .Where(_ => _model.SelectedLayerType != AppLayerType.None)
-                .Subscribe(_model.SetFolderPath)
+                .Where(_ => _layerModel.SelectedLayerType != AppLayerType.None)
+                .Subscribe(index => _layerModel.SetFolderPath(_pathModel.PathInfos[index].Path))
                 .AddTo(_disposables);
         }
         
-        internal void Draw(Rect windowPosition) => _viewContainer.Draw(windowPosition, _model.LayerPathDict, _model.PathInfos.Select(info => new ClassGeneratorFolderSettingPathDto(info)).ToList());
+        internal void Draw(Rect windowPosition)
+        {
+            _viewContainer.Draw(windowPosition, _layerModel.LayerPathDict, _pathModel.PathInfos.Select(info => new ClassGeneratorFolderSettingPathDto(info)).ToList());
+        }
 
         void IDisposable.Dispose()
         {

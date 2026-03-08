@@ -1,38 +1,21 @@
-using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorFolderSettingModel
+    internal sealed class ClassGeneratorFolderSettingPathModel
     {
         private readonly string _absoluteBase;
-
-        private readonly Dictionary<AppLayerType, string> _layerPathDict = new ();
-        public IReadOnlyDictionary<AppLayerType, string> LayerPathDict => _layerPathDict;
         
-        // valueはどこの階層にいるかを調べるために使用する
-        // Viewの見た目を良くするためだけです
         private readonly List<ClassGeneratorFolderSettingPathInfo> _pathInfos = new();
         public IReadOnlyList<ClassGeneratorFolderSettingPathInfo> PathInfos => _pathInfos;
-        
-        private AppLayerType _selectedLayerType;
-        public AppLayerType SelectedLayerType => _selectedLayerType;
-        
-        public ClassGeneratorFolderSettingModel()
+
+        public ClassGeneratorFolderSettingPathModel()
         {
             _absoluteBase = Path.Combine(UnityEngine.Device.Application.dataPath, "Scripts").Replace("\\", "/");
-
-            foreach (var type in Enum.GetValues(typeof(AppLayerType)))
-            {
-                _layerPathDict.Add((AppLayerType)type, string.Empty);
-            }
             RefreshFolderPaths();
         }
         
-        internal void SetSelectedLayerType(AppLayerType layerType) => _selectedLayerType = layerType;
-        internal void SetFolderPath(int index) => _layerPathDict[_selectedLayerType] = _pathInfos[index].Path;
-
         private void RefreshFolderPaths()
         {
             _pathInfos.Clear();

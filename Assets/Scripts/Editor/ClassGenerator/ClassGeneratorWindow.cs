@@ -10,9 +10,7 @@ namespace Editor.ClassGenerator
         private ClassGeneratorPresenter _presenter;
         private ClassGeneratorView _view;
         
-        private ClassGeneratorFolderSettingModel _folderSettingModel;
         private ClassGeneratorFolderSettingPresenter _folderSettingPresenter;
-        private ClassGeneratorFolderSettingViewContainer _folderSettingViewContainer;
         
         // タブの状態管理
         private int _selectedTabIndex = 0;
@@ -32,9 +30,7 @@ namespace Editor.ClassGenerator
             _view = new ClassGeneratorView();
             _presenter = new ClassGeneratorPresenter(_model, _view);
 
-            _folderSettingModel = new ClassGeneratorFolderSettingModel();
-            _folderSettingViewContainer = new ClassGeneratorFolderSettingViewContainer();
-            _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter(_folderSettingViewContainer, _folderSettingModel);
+            _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter();
         }
         
         private void OnDisable()
@@ -55,9 +51,6 @@ namespace Editor.ClassGenerator
                 case 1: // Settings
                     _folderSettingPresenter.Draw(position);
                     break;
-                case 2: // History
-                    DrawHistory();
-                    break;
             }
         }
         
@@ -67,23 +60,6 @@ namespace Editor.ClassGenerator
             _selectedTabIndex = GUILayout.Toolbar(_selectedTabIndex, _tabLabels, EditorStyles.toolbarButton);
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
-        }
-        
-        private void DrawSettings()
-        {
-            EditorGUILayout.BeginVertical(EditorStyles.inspectorDefaultMargins);
-            EditorGUILayout.LabelField("Global Template Settings", EditorStyles.boldLabel);
-            _model.NamespaceName = EditorGUILayout.TextField("Default Namespace", _model.NamespaceName);
-            // その他、共通設定などをここに記述
-            EditorGUILayout.EndVertical();
-        }
-
-        private void DrawHistory()
-        {
-            EditorGUILayout.BeginVertical(EditorStyles.inspectorDefaultMargins);
-            EditorGUILayout.LabelField("Generation History", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("No recent logs found.", MessageType.Info);
-            EditorGUILayout.EndVertical();
         }
     }
 }
