@@ -7,35 +7,43 @@ using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
+    [Flags]
     internal enum AppLayerType
     {
-        None,
-        Presentation, // プレゼンテーション層
-        Application, // アプリケーション層
-        Domain, // ドメイン層
-        Infrastructure, // インフラ層
+        None = 0,
+        Presentation = 1 << 8, // プレゼンテーション層
+        Application = 1 << 9, // アプリケーション層
+        Domain = 1 << 10, // ドメイン層
+        Infrastructure = 1 << 11, // インフラ層
     }
     
+    [Flags]
     internal enum ComponentRoleType
     {
-        None,
+        None = 0,
         
         // プレゼンテーション層
-        Presenter,
-        View,
+        Presenter = (1 << 8) | (1 << 0),
+        View  = (1 << 8) | (1 << 1),
         
         // アプリケーション層
-        UseCase,
-        Service,
+        UseCase = (1 << 9) | (1 << 0),
+        Service = (1 << 9) | (1 << 1),
         
         // ドメイン層
-        Entity,
-        ValueObject,
-        DataTransferObject,
-        RepositoryInterface,
+        Entity = (1 << 10) | (1 << 0),
+        ValueObject = (1 << 10) | (1 << 1),
+        DataTransferObject = (1 << 10) | (1 << 2),
+        RepositoryInterface = (1 << 10) | (1 << 3),
         
         // インフラ層
-        RepositoryImplementation,
+        RepositoryImplementation = (1 << 11) | (1 << 0),
+        
+        // 層判定用のマスク
+        PresentationMask = (1 << 8),
+        ApplicationMask = (1 << 9),
+        DomainMask = (1 << 10),
+        InfrastructureMask = (1 << 11),
     }
     
     internal sealed class ClassGeneratorModel

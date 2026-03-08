@@ -30,15 +30,23 @@ namespace Editor.ClassGenerator
                 .Subscribe(_layerModel.SetSelectedLayerType)
                 .AddTo(_disposables);
             
+            _viewContainer.OnComponentRoleButtonClickedAsObservable
+                .Subscribe(_layerModel.SetSelectedComponentRoleType)
+                .AddTo(_disposables);
+            
             _viewContainer.OnFolderButtonClickedAsObservable
                 .Where(_ => _layerModel.SelectedLayerType != AppLayerType.None)
                 .Subscribe(index => _layerModel.SetFolderPath(_pathModel.PathInfos[index].Path))
+                .AddTo(_disposables);
+            
+            _viewContainer.OnLayerSeparateSettingsAsObservable
+                .Subscribe(_layerModel.SetSeparateSettingsDict)
                 .AddTo(_disposables);
         }
         
         internal void Draw(Rect windowPosition)
         {
-            _viewContainer.Draw(windowPosition, _layerModel.LayerPathDict, _pathModel.PathInfos.Select(info => new ClassGeneratorFolderSettingPathDto(info)).ToList());
+            _viewContainer.Draw(windowPosition, _layerModel.LayerPathDict, _layerModel.ComponentRolePathDict, _layerModel.IsSeparateSettingsDict, _pathModel.PathInfos.Select(info => new ClassGeneratorFolderSettingPathDto(info)).ToList());
         }
 
         void IDisposable.Dispose()
