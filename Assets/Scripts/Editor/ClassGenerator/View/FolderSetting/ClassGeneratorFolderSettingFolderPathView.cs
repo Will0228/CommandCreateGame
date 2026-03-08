@@ -72,7 +72,7 @@ namespace Editor.ClassGenerator
                             // ボタン本体。クリックされたら true を返す
                             if (GUILayout.Button(lastSegment, GUILayout.Height(FOLDER_ROW_HEIGHT), GUILayout.ExpandWidth(false)))
                             {
-                                _onFolderButtonClickedSubject.OnNext(currentDepth);
+                                _onFolderButtonClickedSubject.OnNext(i);
                             }
                         }
                         EditorGUILayout.EndHorizontal();
