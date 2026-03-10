@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using R3;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,15 +6,10 @@ using LayerSettings = Editor.ClassGenerator.ClassGeneratorModel.LayerSettings;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorView : IDisposable
+    internal sealed class ClassGeneratorView
     {
         private Vector2 _scrollPosition;
-
-        private readonly Subject<Unit> _onGenerateRequestedSubject = new();
-        public Observable<Unit> OnGenerateRequestedAsObservable => _onGenerateRequestedSubject;
         
-        
-
         public void Draw(Rect windowPosition, 
             IReadOnlyDictionary<AppLayerType, List<LayerSettings>> layers,
             string nameSpace)
@@ -50,16 +43,14 @@ namespace Editor.ClassGenerator
         private void DrawToolbar(string nameSpace)
         {
             EditorGUILayout.BeginVertical(EditorStyles.toolbar);
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Class Generator", EditorStyles.boldLabel, GUILayout.Width(120));
-            EditorGUILayout.TextField("Namespace", nameSpace);
-
-            if (GUILayout.Button("Generate All", EditorStyles.toolbarButton, GUILayout.Width(100)))
             {
-                // presenter.OnGenerateRequested();
-                _onGenerateRequestedSubject.OnNext(Unit.Default);
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUILayout.LabelField("Class Generator", EditorStyles.boldLabel, GUILayout.Width(120));
+                    EditorGUILayout.TextField("Namespace", nameSpace);
+                }
+                EditorGUILayout.EndHorizontal();
             }
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
         }
 
@@ -128,10 +119,5 @@ namespace Editor.ClassGenerator
         /// 層分割の横線
         /// </summary>
         private void DrawHorizontalLine() { Rect r = GUILayoutUtility.GetRect(0, 1, GUILayout.ExpandWidth(true)); EditorGUI.DrawRect(r, new Color(0.12f, 0.12f, 0.12f)); }
-
-        public void Dispose()
-        {
-            _onGenerateRequestedSubject?.Dispose();
-        }
     }
 }

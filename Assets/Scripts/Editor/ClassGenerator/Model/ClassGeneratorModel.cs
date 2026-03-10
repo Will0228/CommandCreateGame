@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -68,7 +69,14 @@ namespace Editor.ClassGenerator
         
         private readonly Dictionary<AppLayerType, List<LayerSettings>> _layers;
         public IReadOnlyDictionary<AppLayerType, List<LayerSettings>> Layers => _layers;
-
+        public IReadOnlyList<LayerSettings> LayerSettingsList
+            => _layers.Values
+                .SelectMany(layerSettingsList =>
+                {
+                    return layerSettingsList
+                        .Where(layerSettings => layerSettings.ClassNames.Any());
+                }).ToList();
+        
         private readonly Dictionary<ComponentRoleType, bool> _isGeneratedClassDict = new();
         public bool IsExistGeneratedClass(ComponentRoleType componentRoleType) => _isGeneratedClassDict[componentRoleType];
 
@@ -81,83 +89,6 @@ namespace Editor.ClassGenerator
                 { AppLayerType.Domain, new List<LayerSettings> { new(ComponentRoleType.Entity, "Entity", "Entity"), new(ComponentRoleType.ValueObject, "ValueObject", "Vo"), new(ComponentRoleType.DataTransferObject, "DataTransferObject", "Dto"), new(ComponentRoleType.RepositoryInterface, "Repository Interface", "Repository") } },
                 { AppLayerType.Infrastructure, new List<LayerSettings> { new(ComponentRoleType.RepositoryImplementation, "Repository Impl", "Repository") } }
             };
-        }
-        
-        public void GenerateFiles(string outputPath)
-        {
-            if (string.IsNullOrEmpty(outputPath)) return;
-
-            int count = 0;
-            foreach (ComponentRoleType type in Enum.GetValues(typeof(ComponentRoleType)))
-            {
-                if (type == ComponentRoleType.None || !_isGeneratedClassDict[type])
-                {
-                    continue;
-                }
-                
-                foreach (var layer in _layers.Values)
-                {
-                    foreach (var setting in layer)
-                    {
-                        foreach (var name in setting.ClassNames)
-                        {
-                            if (string.IsNullOrWhiteSpace(name)) continue;
-                        
-                            string fullClassName = name + setting.Suffix;
-                            string filePath = Path.Combine(outputPath, fullClassName + ".cs");
-                        
-                            if (File.Exists(filePath)) continue;
-
-                            File.WriteAllText(filePath, GetTemplate(fullClassName, setting.Label));
-                            count++;
-                        }
-                    }
-                }
-                AssetDatabase.Refresh();
-                Debug.Log($"[Class Generator] {count} classes created at {outputPath}");
-            }
-        }
-        
-        private string GetTemplate(string className, string layer)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("using UnityEngine;");
-            if (layer == "State") sb.AppendLine("using System;");
-            sb.AppendLine("");
-            if (!string.IsNullOrEmpty(NamespaceName))
-            {
-                sb.AppendLine($"namespace {NamespaceName}");
-                sb.AppendLine("{");
-            }
-
-            switch (layer)
-            {
-                case "View":
-                    sb.AppendLine($"    public class {className} : MonoBehaviour");
-                    sb.AppendLine("    {");
-                    sb.AppendLine("    }");
-                    break;
-                case "Presenter":
-                    sb.AppendLine($"    public class {className}");
-                    sb.AppendLine("    {");
-                    sb.AppendLine("        public void Initialize()");
-                    sb.AppendLine("        {");
-                    sb.AppendLine("        }");
-                    sb.AppendLine("    }");
-                    break;
-                default:
-                    sb.AppendLine($"    public class {className}");
-                    sb.AppendLine("    {");
-                    sb.AppendLine("    }");
-                    break;
-            }
-
-            if (!string.IsNullOrEmpty(NamespaceName))
-            {
-                sb.AppendLine("}");
-            }
-
-            return sb.ToString();
         }
     }
 }

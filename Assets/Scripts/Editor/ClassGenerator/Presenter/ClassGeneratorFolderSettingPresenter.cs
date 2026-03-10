@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using R3;
 using UnityEngine;
@@ -42,6 +43,12 @@ namespace Editor.ClassGenerator
         internal void Draw(Rect windowPosition)
         {
             _viewContainer.Draw(windowPosition, _layerModel.LayerPathDict, _layerModel.ComponentRolePathDict, _layerModel.IsSeparateSettingsDict, _pathModel.PathInfos.Select(info => new ClassGeneratorFolderSettingPathDto(info)).ToList());
+        }
+
+        internal IReadOnlyDictionary<ClassGeneratorModel.LayerSettings, string> GetLayerTypeAndPaths(
+            IReadOnlyList<ClassGeneratorModel.LayerSettings> settingsList)
+        {
+            return _layerModel.GetLayerTypeAndPaths(settingsList);
         }
 
         void IDisposable.Dispose()

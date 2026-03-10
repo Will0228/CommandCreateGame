@@ -6,6 +6,8 @@ namespace Editor.ClassGenerator
 {
     internal sealed class ClassGeneratorFolderSettingLayerModel
     {
+        private const string ABSOLUTE_PATH = "Assets/Scripts/";
+        
         private readonly Dictionary<AppLayerType, string> _layerPathDict = new ();
         public IReadOnlyDictionary<AppLayerType, string> LayerPathDict => _layerPathDict;
         
@@ -41,17 +43,58 @@ namespace Editor.ClassGenerator
         {
             if (_selectedLayerType is AppLayerType appLayerType && appLayerType != AppLayerType.None)
             {
-                _layerPathDict[appLayerType] = path;
+                _layerPathDict[appLayerType] = ABSOLUTE_PATH + path;
             }
             else if (_selectedLayerType is ComponentRoleType componentRoleType && componentRoleType != ComponentRoleType.None)
             {
-                _componentRolePathDict[componentRoleType] = path;
+                _componentRolePathDict[componentRoleType] = ABSOLUTE_PATH + path;
             }
         }
         
         internal void SetSeparateSettingsDict(AppLayerType layerType)
         {
             _isSeparateSettingsDict[layerType] = !_isSeparateSettingsDict[layerType];
+        }
+
+        internal IReadOnlyDictionary<ClassGeneratorModel.LayerSettings, string> GetLayerTypeAndPaths(IReadOnlyList<ClassGeneratorModel.LayerSettings> settingsList)
+        {
+            var tempDict = new Dictionary<ClassGeneratorModel.LayerSettings, string>();
+            foreach (var settings in settingsList)
+            {
+                var applicableAppLayerType = GetApplicableAppLayerType(settings.Type);
+                if (!_isSeparateSettingsDict[applicableAppLayerType])
+                {
+                    if (!_layerPathDict.TryGetValue(applicableAppLayerType, out var path))
+                    {
+                        throw new KeyNotFoundException($"{applicableAppLayerType} is not found");
+                        return null;
+                    }
+                    tempDict.Add(settings, path);
+                }
+                else
+                {
+                    if (!_componentRolePathDict.TryGetValue(settings.Type, out var path))
+                    {
+                        throw new KeyNotFoundException($"{applicableAppLayerType} is not found");
+                        return null;
+                    }
+                    tempDict.Add(settings, path);
+                }
+            }
+            
+            return tempDict;
+        }
+
+        private AppLayerType GetApplicableAppLayerType(ComponentRoleType componentRoleType)
+        {
+            return componentRoleType switch
+            {
+                _ when (componentRoleType & ComponentRoleType.PresentationMask) != 0 => AppLayerType.Presentation,
+                _ when (componentRoleType & ComponentRoleType.ApplicationMask) != 0 => AppLayerType.Application,
+                _ when (componentRoleType & ComponentRoleType.DomainMask) != 0 => AppLayerType.Domain,
+                _ when (componentRoleType & ComponentRoleType.InfrastructureMask) != 0 => AppLayerType.Infrastructure,
+                _ => throw new ArgumentOutOfRangeException($"{componentRoleType} is not a valid component role")
+            };
         }
     }
 }

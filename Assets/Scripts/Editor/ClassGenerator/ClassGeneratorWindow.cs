@@ -6,10 +6,7 @@ namespace Editor.ClassGenerator
 {
     internal sealed class ClassGeneratorWindow : EditorWindow
     {
-        private ClassGeneratorModel _model;
         private ClassGeneratorPresenter _presenter;
-        private ClassGeneratorView _view;
-        
         private ClassGeneratorFolderSettingPresenter _folderSettingPresenter;
         
         // タブの状態管理
@@ -26,16 +23,13 @@ namespace Editor.ClassGenerator
 
         private void OnEnable()
         {
-            _model = new ClassGeneratorModel();
-            _view = new ClassGeneratorView();
-            _presenter = new ClassGeneratorPresenter(_model, _view);
+            _presenter = new ClassGeneratorPresenter();
 
             _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter();
         }
         
         private void OnDisable()
         {
-            _presenter.Dispose();
             ((IDisposable)_folderSettingPresenter).Dispose();
         }
 
@@ -59,6 +53,13 @@ namespace Editor.ClassGenerator
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             _selectedTabIndex = GUILayout.Toolbar(_selectedTabIndex, _tabLabels, EditorStyles.toolbarButton);
             GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Create Files", EditorStyles.toolbarButton, GUILayout.Width(80)))
+            {
+                var settingsFiles = _presenter.GetLayerSettingsList;
+                var hasPathSettingFiles = _folderSettingPresenter.GetLayerTypeAndPaths(settingsFiles);
+                var createFilesService = new ClassGeneratorCreateFilesService();
+                createFilesService.CreateFiles(hasPathSettingFiles);
+            }
             EditorGUILayout.EndHorizontal();
         }
     }
