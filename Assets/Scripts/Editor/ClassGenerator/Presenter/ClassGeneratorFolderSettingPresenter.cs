@@ -30,12 +30,7 @@ namespace Editor.ClassGenerator
                 .Subscribe(_layerModel.SetSelectedLayerType)
                 .AddTo(_disposables);
             
-            _viewContainer.OnComponentRoleButtonClickedAsObservable
-                .Subscribe(_layerModel.SetSelectedComponentRoleType)
-                .AddTo(_disposables);
-            
             _viewContainer.OnFolderButtonClickedAsObservable
-                .Where(_ => _layerModel.SelectedLayerType != AppLayerType.None)
                 .Subscribe(index => _layerModel.SetFolderPath(_pathModel.PathInfos[index].Path))
                 .AddTo(_disposables);
             

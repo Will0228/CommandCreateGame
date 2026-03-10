@@ -15,11 +15,8 @@ namespace Editor.ClassGenerator
         private readonly Dictionary<AppLayerType, bool> _isSeparateSettingsDict = new();
         public IReadOnlyDictionary<AppLayerType, bool> IsSeparateSettingsDict => _isSeparateSettingsDict;
         
-        private AppLayerType _selectedLayerType;
-        public AppLayerType SelectedLayerType => _selectedLayerType;
-        
-        private ComponentRoleType _selectedComponentRoleType;
-        public ComponentRoleType SelectedComponentRoleType => _selectedComponentRoleType;
+        private Enum _selectedLayerType = AppLayerType.None;
+        public Enum SelectedLayerType => _selectedLayerType;
 
         public ClassGeneratorFolderSettingLayerModel()
         {
@@ -35,19 +32,21 @@ namespace Editor.ClassGenerator
             }
         }
         
-        internal void SetSelectedLayerType(AppLayerType layerType)
+        internal void SetSelectedLayerType(Enum layerType)
         {
             _selectedLayerType = layerType;
         }
 
-        internal void SetSelectedComponentRoleType(ComponentRoleType componentRoleType)
-        {
-            _selectedComponentRoleType = componentRoleType;
-        }
-
         internal void SetFolderPath(string path)
         {
-            _layerPathDict[_selectedLayerType] = path;
+            if (_selectedLayerType is AppLayerType appLayerType && appLayerType != AppLayerType.None)
+            {
+                _layerPathDict[appLayerType] = path;
+            }
+            else if (_selectedLayerType is ComponentRoleType componentRoleType && componentRoleType != ComponentRoleType.None)
+            {
+                _componentRolePathDict[componentRoleType] = path;
+            }
         }
         
         internal void SetSeparateSettingsDict(AppLayerType layerType)

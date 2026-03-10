@@ -95,7 +95,6 @@ namespace Editor.ClassGenerator
                     continue;
                 }
                 
-                
                 foreach (var layer in _layers.Values)
                 {
                     foreach (var setting in layer)

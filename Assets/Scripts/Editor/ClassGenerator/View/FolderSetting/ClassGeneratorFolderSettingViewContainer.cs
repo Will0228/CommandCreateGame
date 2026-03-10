@@ -12,8 +12,7 @@ namespace Editor.ClassGenerator
         private readonly ClassGeneratorFolderSettingLayerView _layerView;
         
         public Observable<int> OnFolderButtonClickedAsObservable => _folderPathView.OnFolderButtonClickedAsObservable;
-        public Observable<AppLayerType> OnLayerButtonClickedAsObservable => _layerView.OnLayerButtonClickedAsObservable;
-        public Observable<ComponentRoleType> OnComponentRoleButtonClickedAsObservable => _layerView.OnComponentRoleButtonClickedAsObservable;
+        public Observable<Enum> OnLayerButtonClickedAsObservable => _layerView.OnLayerPathSettingButtonClickedAsObservable;
         public Observable<AppLayerType> OnLayerSeparateSettingsAsObservable => _layerView.OnLayerSeparateSettingsAsObservable;
 
         public ClassGeneratorFolderSettingViewContainer()
@@ -30,13 +29,13 @@ namespace Editor.ClassGenerator
         internal void Draw(Rect windowPosition,
             IReadOnlyDictionary<AppLayerType, string> layerPathDict,
             IReadOnlyDictionary<ComponentRoleType, string> componentRoleSettingsDict,
-            IReadOnlyDictionary<AppLayerType, bool> isSeperateSettingsDict,
+            IReadOnlyDictionary<AppLayerType, bool> isSeparateSettingsDict,
             IReadOnlyList<ClassGeneratorFolderSettingPathDto> pathDtos)
         {
             var halfWidth = windowPosition.width / 2f - 2f;
             
             EditorGUILayout.BeginHorizontal();
-            _layerView.Draw(layerPathDict, componentRoleSettingsDict, isSeperateSettingsDict, halfWidth);
+            _layerView.Draw(layerPathDict, componentRoleSettingsDict, isSeparateSettingsDict, halfWidth);
             _folderPathView.Draw(pathDtos);
             EditorGUILayout.EndHorizontal();
         }
