@@ -8,12 +8,12 @@ namespace Editor.ClassGenerator
     {
         private ClassGeneratorPresenter _presenter;
         private ClassGeneratorFolderSettingPresenter _folderSettingPresenter;
+        private ClassGeneratorWordingSettingPresenter _wordingSettingPresenter;
         
         // タブの状態管理
         private int _selectedTabIndex = 0;
-        private readonly string[] _tabLabels = { "Generator", "Folder Settings", "History" };
-
-
+        private readonly string[] _tabLabels = { "Generator", "Folder Settings", "Wording Settings" };
+        
         [MenuItem("Tools/Class Generator")]
         public static void ShowWindow()
         {
@@ -24,8 +24,8 @@ namespace Editor.ClassGenerator
         private void OnEnable()
         {
             _presenter = new ClassGeneratorPresenter();
-
             _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter();
+            _wordingSettingPresenter = new ClassGeneratorWordingSettingPresenter();
         }
         
         private void OnDisable()
@@ -39,11 +39,14 @@ namespace Editor.ClassGenerator
             
             switch (_selectedTabIndex)
             {
-                case 0: // Generator
+                case 0:
                     _presenter.Draw(position);
                     break;
-                case 1: // Settings
+                case 1:
                     _folderSettingPresenter.Draw(position);
+                    break;
+                case 2:
+                    _wordingSettingPresenter.Draw(position);
                     break;
             }
         }
