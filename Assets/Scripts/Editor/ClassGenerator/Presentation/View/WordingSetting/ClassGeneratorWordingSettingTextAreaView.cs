@@ -1,46 +1,45 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
+using WordingSettingInfo = Editor.ClassGenerator.ClassGeneratorWordingSettingInfo;
+using CellView = Editor.ClassGenerator.ClassGeneratorWordingSettingTextAreaCellView;
+using CellsManagerView = Editor.ClassGenerator.ClassGeneratorWordingSettingTextAreaCellsManagerView;
 
 namespace Editor.ClassGenerator
 {
     internal sealed class ClassGeneratorWordingSettingTextAreaView
     {
-        private string _text;
+        private readonly float _viewWidth;
+        private const float LABEL_WIDTH = 200f;
+        
         private Vector2 _scrollPosition;
-
-        internal void Configure(string defaultText)
+        
+        private readonly CellView _cachedImplementationDetailsTextAreaCellView;
+        private readonly CellsManagerView _cachedClassSettingsCellsManagerView;
+        
+        internal ClassGeneratorWordingSettingTextAreaView(ClassGeneratorWordingSettingInfo info)
         {
-            _text = defaultText;
+            _cachedImplementationDetailsTextAreaCellView = new CellView(info, LABEL_WIDTH);
+            _cachedClassSettingsCellsManagerView = new CellsManagerView(LABEL_WIDTH);
+        }
+
+        internal void UpdateData(IReadOnlyDictionary<ComponentRoleType, WordingSettingInfo> dict)
+        {
+            _cachedClassSettingsCellsManagerView.UpdateData(dict);
         }
         
-        internal void Draw(float viewWidth)
+        internal void Draw()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(viewWidth));
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
             {
-                EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 {
-                    GUILayout.Label("実装してほしい内容", EditorStyles.boldLabel, GUILayout.Width(200));
-                    GUILayout.FlexibleSpace();
-
-                    if (GUILayout.Button("Clear"))
-                    {
-                        _text = string.Empty;
-                        GUI.FocusControl(null);
-                    }
+                    _cachedImplementationDetailsTextAreaCellView.Draw();
                 }
-                EditorGUILayout.EndHorizontal();
-                
-                _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
-                {
-                    var style = new GUIStyle(EditorStyles.textArea)
-                    {
-                        wordWrap = true,
-                    };
-                    _text = EditorGUILayout.TextArea(_text, style, GUILayout.ExpandHeight(true));
-                }
-                EditorGUILayout.EndScrollView();
+                EditorGUILayout.EndVertical();
             }
-            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndScrollView();
         }
     }
 }
