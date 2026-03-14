@@ -1,10 +1,11 @@
 using System;
+using R3;
 using UnityEditor;
 using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorWindow : EditorWindow
+    internal sealed class ClassGeneratorWindow : EditorWindow, IDisposable
     {
         private ClassGeneratorPresenter _presenter;
         private ClassGeneratorFolderSettingPresenter _folderSettingPresenter;
@@ -12,7 +13,10 @@ namespace Editor.ClassGenerator
         
         // タブの状態管理
         private int _selectedTabIndex = 0;
+        private readonly ReactiveProperty<int> _selectedTabIndexProp = new();
         private readonly string[] _tabLabels = { "Generator", "Folder Settings", "Wording Settings" };
+        
+        private readonly CompositeDisposable _disposable = new();
         
         [MenuItem("Tools/Class Generator")]
         public static void ShowWindow()
@@ -25,12 +29,28 @@ namespace Editor.ClassGenerator
         {
             _presenter = new ClassGeneratorPresenter();
             _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter();
-            _wordingSettingPresenter = new ClassGeneratorWordingSettingPresenter();
+            _wordingSettingPresenter = new ClassGeneratorWordingSettingPresenter(_disposable);
+            
+            SetEvent();
+        }
+
+        private void SetEvent()
+        {
+            _selectedTabIndexProp
+                .Subscribe(UpdateData)
+                .AddTo(_disposable);
         }
         
-        private void OnDisable()
+        private void UpdateData(int index)
         {
-            ((IDisposable)_folderSettingPresenter).Dispose();
+            switch (_selectedTabIndex)
+            {
+                case 2:
+                    _wordingSettingPresenter.UpdateData(_presenter.GetLayerSettingsList);
+                    break;
+                default:
+                    break; // 一旦何もしない
+            }
         }
 
         private void OnGUI()
@@ -64,6 +84,16 @@ namespace Editor.ClassGenerator
                 createFilesService.CreateFiles(hasPathSettingFiles);
             }
             EditorGUILayout.EndHorizontal();
+        }
+        
+        private void OnDisable() => Dispose();
+
+        public void Dispose()
+        {
+            ((IDisposable)_folderSettingPresenter)?.Dispose();
+            ((IDisposable)_wordingSettingPresenter)?.Dispose();
+            _selectedTabIndexProp?.Dispose();
+            _disposable?.Dispose();
         }
     }
 }
