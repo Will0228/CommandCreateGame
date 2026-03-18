@@ -5,18 +5,19 @@ using System.Text;
 using R3;
 
 namespace Editor.ClassGenerator
-{x
+{
     internal sealed class ClassGeneratorWordingSettingTextAreaModel : IDisposable
     {
         private readonly ClassGeneratorWordingSettingInfo _cachedImplementationDetailsInfo;
         public ClassGeneratorWordingSettingInfo ImplementationDetailsInfo => _cachedImplementationDetailsInfo;
 
-        private readonly Dictionary<ComponentRoleType, string> _cachedContentTextByRoleTypes = new();
+        private readonly Dictionary<ClassId, ClassGeneratorWordingSettingClassInfo> _cachedClassSettingDict = new();
+        private readonly List<ClassGeneratorWordingSettingClassInfo> _cachedInfos = new(); // パフォーマンス考慮のため辞書から毎回リストを作らない
         
         // このタブを開いた瞬間に別タブの情報で更新をかけた時の購読
-        private readonly Subject<IReadOnlyDictionary<ComponentRoleType, string>> _updateContentTextTypeSubject = new();
-        public Observable<IReadOnlyDictionary<ComponentRoleType, string>> UpdateContentTextTypeAsObservable 
-            => _updateContentTextTypeSubject.AsObservable();
+        private readonly Subject<IReadOnlyList<ClassGeneratorWordingSettingClassInfo>> _updateClassInfosSubject = new();
+        public Observable<IReadOnlyList<ClassGeneratorWordingSettingClassInfo>> UpdateClassInfosAsObservable 
+            => _updateClassInfosSubject.AsObservable();
 
         internal ClassGeneratorWordingSettingTextAreaModel()
         {
@@ -27,38 +28,42 @@ namespace Editor.ClassGenerator
             _cachedImplementationDetailsInfo = new ClassGeneratorWordingSettingInfo("実装したい内容", implementationTextSb.ToString());
         }
 
-        internal void UpdateData(IReadOnlyList<ClassGeneratorModel.LayerSettings> settingsList)
+        internal void UpdateData(IReadOnlyDictionary<ClassId, ComponentRoleType> dict)
         {
             // 消えている要素は辞書から削除し、追加されているクラスは辞書に追加する
-            var types = settingsList
-                .Select(s => s.Type)
-                .ToList();
 
             // 元々辞書に存在したが、今回の更新で消えたクラス
-            var rolesToRemove = _cachedContentTextByRoleTypes.Keys
-                .Where(existingRole => !types.Contains(existingRole))
+            var rolesToRemove = _cachedClassSettingDict.Keys
+                .Where(existingRole => !dict.Keys.Contains(existingRole))
                 .ToList();
 
             foreach (var role in rolesToRemove)
             {
-                _cachedContentTextByRoleTypes.Remove(role);
+                _cachedClassSettingDict.Remove(role);
             }
 
             // 3. 追加・更新処理: 新しいリストにある要素を辞書に反映
-            foreach (var type in types)
+            foreach (var kvp in dict)
             {
-                if (!_cachedContentTextByRoleTypes.ContainsKey(type))
+                if (!_cachedClassSettingDict.ContainsKey(kvp.Key))
                 {
-                    _cachedContentTextByRoleTypes.Add(type, "任せます");
+                    _cachedClassSettingDict.Add(kvp.Key, new ClassGeneratorWordingSettingClassInfo(new ClassGeneratorWordingSettingInfo(kvp.Key.Value, "任せます"), kvp.Value));
                 }
             }
             
-            _updateContentTextTypeSubject.OnNext(_cachedContentTextByRoleTypes);
+            // 辞書からリストを作成せずにキャッシュされているリストに値を移し替える
+            _cachedInfos.Clear();
+            foreach (var kvp in _cachedClassSettingDict)
+            {
+                _cachedInfos.Add(kvp.Value);
+            }
+            
+            _updateClassInfosSubject.OnNext(_cachedInfos);
         }
 
         void IDisposable.Dispose()
         {
-            _updateContentTextTypeSubject.Dispose();
+            _updateClassInfosSubject.Dispose();
         }
     }
 }

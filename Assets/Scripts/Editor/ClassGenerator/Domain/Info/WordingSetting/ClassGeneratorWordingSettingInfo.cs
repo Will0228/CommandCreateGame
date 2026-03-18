@@ -1,4 +1,5 @@
 namespace Editor.ClassGenerator
 {
-    internal sealed record ClassGeneratorWordingSettingInfo(string Label, string ContentText) { }
+    internal sealed record ClassGeneratorWordingSettingInfo(string Label,
+        string ContentText) {}
 }

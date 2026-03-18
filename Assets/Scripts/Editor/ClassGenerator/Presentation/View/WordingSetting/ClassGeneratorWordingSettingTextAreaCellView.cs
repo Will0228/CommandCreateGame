@@ -6,17 +6,25 @@ namespace Editor.ClassGenerator
     internal sealed class ClassGeneratorWordingSettingTextAreaCellView
     {
         private readonly float _labelWidth;
+        private readonly float _viewHeight;
         private readonly string _labelText;
         
         private string _text;
         private Vector2 _scrollPosition;
 
+        private readonly GUILayoutOption _textAreaOption;
+
         internal ClassGeneratorWordingSettingTextAreaCellView(ClassGeneratorWordingSettingInfo info,
-            float labelWidth)
+            float labelWidth,
+            float viewHeight,
+            bool isTextAreaExpandHeight = true)
         {
             _text = info.ContentText;
             _labelText = info.Label;
             _labelWidth = labelWidth;
+            _viewHeight = viewHeight;
+
+            _textAreaOption = GUILayout.ExpandHeight(isTextAreaExpandHeight);
         }
 
         internal void Draw()
@@ -36,13 +44,13 @@ namespace Editor.ClassGenerator
                 }
                 EditorGUILayout.EndHorizontal();
                 
-                _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(300));
+                _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(_viewHeight));
                 {
                     var style = new GUIStyle(EditorStyles.textArea)
                     {
                         wordWrap = true,
                     };
-                    _text = EditorGUILayout.TextArea(_text, style, GUILayout.ExpandHeight(true));
+                    _text = EditorGUILayout.TextArea(_text, style, _textAreaOption);
                 }
                 EditorGUILayout.EndScrollView();
             }

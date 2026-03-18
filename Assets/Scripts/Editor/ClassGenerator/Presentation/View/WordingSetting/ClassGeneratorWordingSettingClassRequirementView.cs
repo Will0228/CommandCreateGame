@@ -1,40 +1,81 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-using LayerSettings = Editor.ClassGenerator.ClassGeneratorModel.LayerSettings;
+using CellView = Editor.ClassGenerator.ClassGeneratorWordingSettingTextAreaCellView;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorView
+    /// <summary>
+    /// クラスごとの要望を設定するView
+    /// </summary>
+    internal sealed class ClassGeneratorWordingSettingClassRequirementView
     {
         private Vector2 _scrollPosition;
         
-        public void Draw(Rect windowPosition, 
-            IReadOnlyDictionary<AppLayerType, List<LayerSettings>> layers,
-            string nameSpace)
+        private const float LABEL_WIDTH = 200f;
+
+        private readonly float _halfWidth;
+        private readonly float _halfHeight;
+        // 配列はレイヤー層のため
+        // 0 = プレゼンテーション層, 1 = アプリケーション層, 2 = ドメイン層, 3 = インフラ層
+        private readonly List<CellView>[] _cellViewsArray = new List<CellView>[4];
+
+        internal ClassGeneratorWordingSettingClassRequirementView(Rect windowPosition)
         {
-            DrawToolbar(nameSpace);
+            _halfWidth = windowPosition.width / 2f;
+            _halfHeight = windowPosition.height / 2f;
+        }
 
-            var halfWidth = windowPosition.width / 2f - 2f;
-            var halfHeight = (windowPosition.height - 35f) / 2f;
-
+        /// <summary>
+        /// 別のタブに遷移している間に入った変更を適用させる
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// Cellを作り直しているのでパフォーマンスは最適ではないです
+        /// これによって重くなるのであれば実装を見直してください
+        /// </remarks>
+        internal void UpdateData(IReadOnlyList<ClassGeneratorWordingSettingClassInfo> infos)
+        {
+            foreach (var cellViews in _cellViewsArray)
+            {
+                cellViews.Clear();
+            }
+            
+            foreach (var info in infos)
+            {
+                var targetList = info.ComponentRoleType switch
+                {
+                    ComponentRoleType.PresentationMask => _cellViewsArray[0],
+                    ComponentRoleType.ApplicationMask => _cellViewsArray[1],
+                    ComponentRoleType.DomainMask => _cellViewsArray[2],
+                    ComponentRoleType.InfrastructureMask => _cellViewsArray[3],
+                    _ => throw new ArgumentOutOfRangeException($"{info.ComponentRoleType} is not a valid component role"),
+                };
+                
+                targetList.Add(new ClassGeneratorWordingSettingTextAreaCellView(info.Info, LABEL_WIDTH, 50, false));
+            }
+        }
+        
+        public void Draw()
+        {
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
-
+            
             // 上段プレゼンテーション層とアプリケーション層を実装
-            EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
-            DrawLayerArea("Presentation", layers[AppLayerType.Presentation], halfWidth);
+            EditorGUILayout.BeginHorizontal(GUILayout.Height(_halfHeight));
+            DrawLayerArea("Presentation", _cellViewsArray[0], _halfWidth);
             DrawVerticalLine();
-            DrawLayerArea("Application", layers[AppLayerType.Application], halfWidth);
+            DrawLayerArea("Application", _cellViewsArray[1], _halfWidth);
             EditorGUILayout.EndHorizontal();
 
             DrawHorizontalLine();
 
             // 下段ドメイン層とインフラ層を実装
-            EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
-            DrawLayerArea("Domain", layers[AppLayerType.Domain], halfWidth);
+            EditorGUILayout.BeginHorizontal(GUILayout.Height(_halfHeight));
+            DrawLayerArea("Domain", _cellViewsArray[2], _halfWidth);
             DrawVerticalLine();
-            DrawLayerArea("Infrastructure", layers[AppLayerType.Infrastructure], halfWidth);
+            DrawLayerArea("Infrastructure", _cellViewsArray[3], _halfWidth);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndScrollView();
@@ -57,7 +98,7 @@ namespace Editor.ClassGenerator
         /// <summary>
         /// 層ごとの設定項目を列挙
         /// </summary>
-        private void DrawLayerArea(string title, List<LayerSettings> settings, float width)
+        private void DrawLayerArea(string title, List<ClassGeneratorModel.LayerSettings> settings, float width)
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(width), GUILayout.ExpandHeight(true));
             GUI.backgroundColor = new Color(0.25f, 0.25f, 0.25f);
@@ -74,7 +115,7 @@ namespace Editor.ClassGenerator
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawSettingCard(LayerSettings setting)
+        private void DrawSettingCard(ClassGeneratorModel.LayerSettings setting)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
@@ -109,7 +150,7 @@ namespace Editor.ClassGenerator
             }
             EditorGUILayout.EndVertical();
         }
-
+        
         /// <summary>
         /// 層分割の縦線
         /// </summary>
@@ -127,5 +168,6 @@ namespace Editor.ClassGenerator
             var r = GUILayoutUtility.GetRect(0, 1, GUILayout.ExpandWidth(true));
             EditorGUI.DrawRect(r, new Color(0.12f, 0.12f, 0.12f));
         }
+        
     }
 }

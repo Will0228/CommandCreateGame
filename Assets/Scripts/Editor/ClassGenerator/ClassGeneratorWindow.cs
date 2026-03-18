@@ -12,8 +12,8 @@ namespace Editor.ClassGenerator
         private ClassGeneratorWordingSettingPresenter _wordingSettingPresenter;
         
         // タブの状態管理
-        private int _selectedTabIndex = 0;
         private readonly ReactiveProperty<int> _selectedTabIndexProp = new();
+        private int _selectedTabIndex => _selectedTabIndexProp.Value;
         private readonly string[] _tabLabels = { "Generator", "Folder Settings", "Wording Settings" };
         
         private readonly CompositeDisposable _disposable = new();
@@ -29,7 +29,7 @@ namespace Editor.ClassGenerator
         {
             _presenter = new ClassGeneratorPresenter();
             _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter();
-            _wordingSettingPresenter = new ClassGeneratorWordingSettingPresenter(_disposable);
+            _wordingSettingPresenter = new ClassGeneratorWordingSettingPresenter(position, _disposable);
             
             SetEvent();
         }
@@ -66,7 +66,7 @@ namespace Editor.ClassGenerator
                     _folderSettingPresenter.Draw(position);
                     break;
                 case 2:
-                    _wordingSettingPresenter.Draw(position);
+                    _wordingSettingPresenter.Draw();
                     break;
             }
         }
@@ -74,7 +74,7 @@ namespace Editor.ClassGenerator
         private void DrawTabs()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            _selectedTabIndex = GUILayout.Toolbar(_selectedTabIndex, _tabLabels, EditorStyles.toolbarButton);
+            _selectedTabIndexProp.Value = GUILayout.Toolbar(_selectedTabIndex, _tabLabels, EditorStyles.toolbarButton);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Create Files", EditorStyles.toolbarButton, GUILayout.Width(80)))
             {
