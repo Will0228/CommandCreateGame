@@ -113,11 +113,19 @@ namespace Editor.ClassGenerator
         /// <summary>
         /// 層分割の縦線
         /// </summary>
-        private void DrawVerticalLine() { Rect r = GUILayoutUtility.GetRect(1, 0, GUILayout.ExpandHeight(true)); EditorGUI.DrawRect(r, new Color(0.12f, 0.12f, 0.12f)); }
-        
+        private void DrawVerticalLine()
+        {
+            var r = GUILayoutUtility.GetRect(1, 0, GUILayout.ExpandHeight(true));
+            EditorGUI.DrawRect(r, new Color(0.12f, 0.12f, 0.12f));
+        }
+
         /// <summary>
         /// 層分割の横線
         /// </summary>
-        private void DrawHorizontalLine() { Rect r = GUILayoutUtility.GetRect(0, 1, GUILayout.ExpandWidth(true)); EditorGUI.DrawRect(r, new Color(0.12f, 0.12f, 0.12f)); }
+        private void DrawHorizontalLine()
+        {
+            var r = GUILayoutUtility.GetRect(0, 1, GUILayout.ExpandWidth(true));
+            EditorGUI.DrawRect(r, new Color(0.12f, 0.12f, 0.12f));
+        }
     }
 }

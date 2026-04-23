@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using R3;
 using UnityEngine;
 
@@ -9,19 +10,27 @@ namespace Editor.ClassGenerator
     {
         private readonly ClassGeneratorWordingSettingViewContainer _viewContainer;
         private readonly ClassGeneratorWordingSettingTextAreaModel _textAreaModel;
+        private readonly ClassGeneratorWordingSettingCommonModel _commonModel;
+        private readonly ClassIdFactory _classIdFactory;
 
-        internal ClassGeneratorWordingSettingPresenter(CompositeDisposable disposable)
+        internal ClassGeneratorWordingSettingPresenter(Rect windowPosition, CompositeDisposable disposable)
         {
-            _textAreaModel = new ClassGeneratorWordingSettingTextAreaModel();
-            _viewContainer = new ClassGeneratorWordingSettingViewContainer(_textAreaModel.ImplementationDetailsInfo);
+            _textAreaModel = new ();
+            _viewContainer = new (windowPosition, _textAreaModel.ImplementationDetailsInfo);
+            _commonModel = new();
+            _classIdFactory = new ();
 
             Bind(disposable);
         }
 
         private void Bind(CompositeDisposable disposable)
         {
-            _textAreaModel.UpdateContentTextTypeAsObservable
-                .Subscribe()
+            _textAreaModel.UpdateClassInfosAsObservable
+                .Subscribe(_viewContainer.UpdateData)
+                .AddTo(disposable);
+            
+            _commonModel.CurrentSelectedTabIndex
+                .Subscribe(_viewContainer.ChangeTab)
                 .AddTo(disposable);
         }
 
@@ -30,17 +39,18 @@ namespace Editor.ClassGenerator
         /// </summary>
         internal void UpdateData(IReadOnlyList<ClassGeneratorModel.LayerSettings> settingsList)
         {
-            _textAreaModel.UpdateData(settingsList);
+            _textAreaModel.UpdateData(settingsList.ToDictionary(settings => _classIdFactory.Create(settings), settings => settings.Type));
         }
 
-        internal void Draw(Rect windowPosition)
+        internal void Draw()
         {
-            _viewContainer.Draw(windowPosition);
+            _viewContainer.Draw();
         }
 
         void IDisposable.Dispose()
         {
             ((IDisposable)_textAreaModel).Dispose();
+            ((IDisposable)_commonModel).Dispose();
         }
     }
 }
