@@ -13,9 +13,9 @@ namespace Editor.ClassGenerator
         
         private Vector2 _scrollPosition;
         
-        private readonly CellView _cachedImplementationDetailsTextAreaCellView;
-        
-        internal ClassGeneratorWordingSettingTextAreaView(ClassGeneratorWordingSettingInfo info)
+        private CellView _cachedImplementationDetailsTextAreaCellView;
+
+        public void Configure(ClassGeneratorWordingSettingInfo info)
         {
             _cachedImplementationDetailsTextAreaCellView = new CellView(info, LABEL_WIDTH, VIEW_HEIGHT);
         }

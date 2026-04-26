@@ -16,11 +16,12 @@ namespace Editor.ClassGenerator
         
         private readonly CompositeDisposable _disposables = new();
         
-        internal ClassGeneratorFolderSettingPresenter()
+        [EditorInject]
+        public ClassGeneratorFolderSettingPresenter(ClassGeneratorSimpleDIContainer container)
         {
-            _viewContainer = new ClassGeneratorFolderSettingViewContainer();
-            _layerModel = new ClassGeneratorFolderSettingLayerModel();
-            _pathModel = new ClassGeneratorFolderSettingPathModel();
+            _viewContainer = container.Resolve<ClassGeneratorFolderSettingViewContainer>();
+            _layerModel = container.Resolve<ClassGeneratorFolderSettingLayerModel>();
+            _pathModel = container.Resolve<ClassGeneratorFolderSettingPathModel>();
 
             Bind();
         }

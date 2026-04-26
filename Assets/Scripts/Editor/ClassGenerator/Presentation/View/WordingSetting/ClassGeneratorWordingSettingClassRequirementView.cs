@@ -16,21 +16,24 @@ namespace Editor.ClassGenerator
         
         private const float LABEL_WIDTH = 200f;
 
-        private readonly float _halfWidth;
-        private readonly float _halfHeight;
+        private float _halfWidth;
+        private float _halfHeight;
         // 配列はレイヤー層のため
         // 0 = プレゼンテーション層, 1 = アプリケーション層, 2 = ドメイン層, 3 = インフラ層
         private readonly List<CellView>[] _cellViewsArray = new List<CellView>[4];
 
-        internal ClassGeneratorWordingSettingClassRequirementView(Rect windowPosition)
+        public ClassGeneratorWordingSettingClassRequirementView()
         {
-            _halfWidth = windowPosition.width / 2f;
-            _halfHeight = windowPosition.height / 2f;
-
             for (int i = 0; i < _cellViewsArray.Length; i++)
             {
                 _cellViewsArray[i] = new List<CellView>();
             }
+        }
+
+        public void Configure(Rect windowPosition)
+        {
+            _halfWidth = windowPosition.width / 2f;
+            _halfHeight = windowPosition.height / 2f;
         }
 
         /// <summary>
@@ -41,7 +44,7 @@ namespace Editor.ClassGenerator
         /// Cellを作り直しているのでパフォーマンスは最適ではないです
         /// これによって重くなるのであれば実装を見直してください
         /// </remarks>
-        internal void UpdateData(IReadOnlyList<ClassGeneratorWordingSettingClassInfo> infos)
+        public void UpdateData(IReadOnlyList<ClassGeneratorWordingSettingClassInfo> infos)
         {
             foreach (var cellViews in _cellViewsArray)
             {

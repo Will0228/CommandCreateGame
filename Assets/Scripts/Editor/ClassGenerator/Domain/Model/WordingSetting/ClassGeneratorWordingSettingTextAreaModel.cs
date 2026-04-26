@@ -19,7 +19,7 @@ namespace Editor.ClassGenerator
         public Observable<IReadOnlyList<ClassGeneratorWordingSettingClassInfo>> UpdateClassInfosAsObservable 
             => _updateClassInfosSubject.AsObservable();
 
-        internal ClassGeneratorWordingSettingTextAreaModel()
+        public ClassGeneratorWordingSettingTextAreaModel()
         {
             var implementationTextSb = new StringBuilder();
             implementationTextSb.AppendLine("以下のクラスを用いて【】を実装したいです。");
@@ -28,7 +28,7 @@ namespace Editor.ClassGenerator
             _cachedImplementationDetailsInfo = new ClassGeneratorWordingSettingInfo("実装したい内容", implementationTextSb.ToString());
         }
 
-        internal void UpdateData(IReadOnlyDictionary<ClassId, ComponentRoleType> dict)
+        public void UpdateData(IReadOnlyDictionary<ClassId, ComponentRoleType> dict)
         {
             // 消えている要素は辞書から削除し、追加されているクラスは辞書に追加する
 

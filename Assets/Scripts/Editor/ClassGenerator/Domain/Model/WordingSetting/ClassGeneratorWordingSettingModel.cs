@@ -3,7 +3,7 @@ using R3;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorWordingSettingCommonModel : IDisposable
+    internal sealed class ClassGeneratorWordingSettingModel : IDisposable
     {
         private readonly ReactiveProperty<int> _currentSelectedTabIndexProp = new();
         public ReadOnlyReactiveProperty<int>  CurrentSelectedTabIndex => _currentSelectedTabIndexProp;

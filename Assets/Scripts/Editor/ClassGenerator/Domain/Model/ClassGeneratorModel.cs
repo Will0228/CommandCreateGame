@@ -8,45 +8,6 @@ using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
-    [Flags]
-    internal enum AppLayerType
-    {
-        None = 0,
-        Presentation = 1 << 8, // プレゼンテーション層
-        Application = 1 << 9, // アプリケーション層
-        Domain = 1 << 10, // ドメイン層
-        Infrastructure = 1 << 11, // インフラ層
-    }
-    
-    [Flags]
-    internal enum ComponentRoleType
-    {
-        None = 0,
-        
-        // プレゼンテーション層
-        Presenter = (1 << 8) | (1 << 0),
-        View  = (1 << 8) | (1 << 1),
-        
-        // アプリケーション層
-        UseCase = (1 << 9) | (1 << 0),
-        Service = (1 << 9) | (1 << 1),
-        
-        // ドメイン層
-        Entity = (1 << 10) | (1 << 0),
-        ValueObject = (1 << 10) | (1 << 1),
-        DataTransferObject = (1 << 10) | (1 << 2),
-        RepositoryInterface = (1 << 10) | (1 << 3),
-        
-        // インフラ層
-        RepositoryImplementation = (1 << 11) | (1 << 0),
-        
-        // 層判定用のマスク
-        PresentationMask = (1 << 8),
-        ApplicationMask = (1 << 9),
-        DomainMask = (1 << 10),
-        InfrastructureMask = (1 << 11),
-    }
-    
     internal sealed class ClassGeneratorModel
     {
         [Serializable]
@@ -70,12 +31,7 @@ namespace Editor.ClassGenerator
         private readonly Dictionary<AppLayerType, List<LayerSettings>> _layers;
         public IReadOnlyDictionary<AppLayerType, List<LayerSettings>> Layers => _layers;
         public IReadOnlyList<LayerSettings> LayerSettingsList
-            => _layers.Values
-                .SelectMany(layerSettingsList =>
-                {
-                    return layerSettingsList
-                        .Where(layerSettings => layerSettings.ClassNames.Any());
-                }).ToList();
+            => _layers.Values.SelectMany(layerSettingsList =>layerSettingsList.Where(layerSettings => layerSettings.ClassNames.Any())).ToList();
         
         private readonly Dictionary<ComponentRoleType, bool> _isGeneratedClassDict = new();
         public bool IsExistGeneratedClass(ComponentRoleType componentRoleType) => _isGeneratedClassDict[componentRoleType];

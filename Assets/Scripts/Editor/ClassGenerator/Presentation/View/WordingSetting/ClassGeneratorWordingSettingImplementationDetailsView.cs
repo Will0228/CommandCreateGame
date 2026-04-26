@@ -11,16 +11,21 @@ namespace Editor.ClassGenerator
         private readonly ClassGeneratorWordingSettingTextAreaView _textAreaView;
         private readonly ClassGeneratorWordingSettingApplyTemplateView _applyTemplateView;
 
-        private readonly float _halfWidth;
+        private float _halfWidth;
         
-        internal ClassGeneratorWordingSettingImplementationDetailsView(ClassGeneratorWordingSettingInfo info, Rect windowPosition)
+        public ClassGeneratorWordingSettingImplementationDetailsView()
         {
-            _textAreaView = new ClassGeneratorWordingSettingTextAreaView(info);
+            _textAreaView = new ClassGeneratorWordingSettingTextAreaView();
             _applyTemplateView = new ClassGeneratorWordingSettingApplyTemplateView();
+        }
+
+        public void Configure(ClassGeneratorWordingSettingInfo info, Rect windowPosition)
+        {
             _halfWidth = windowPosition.width / 2;
+            _textAreaView.Configure(info);
         }
         
-        internal void Draw()
+        public void Draw()
         {
             EditorGUILayout.BeginHorizontal();
             {

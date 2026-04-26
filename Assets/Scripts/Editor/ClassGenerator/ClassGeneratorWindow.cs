@@ -7,14 +7,14 @@ namespace Editor.ClassGenerator
 {
     internal sealed class ClassGeneratorWindow : EditorWindow, IDisposable
     {
+        private ClassGeneratorSimpleDIContainer _container;
+        
+        private ClassGeneratorCommonPresenter _commonPresenter;
+        private ClassGeneratorCommonModel _commonModel;
+        
         private ClassGeneratorPresenter _presenter;
         private ClassGeneratorFolderSettingPresenter _folderSettingPresenter;
         private ClassGeneratorWordingSettingPresenter _wordingSettingPresenter;
-        
-        // タブの状態管理
-        private readonly ReactiveProperty<int> _selectedTabIndexProp = new();
-        private int _selectedTabIndex => _selectedTabIndexProp.Value;
-        private readonly string[] _tabLabels = { "Generator", "Folder Settings", "Wording Settings" };
         
         private readonly CompositeDisposable _disposable = new();
         
@@ -27,23 +27,36 @@ namespace Editor.ClassGenerator
 
         private void OnEnable()
         {
-            _presenter = new ClassGeneratorPresenter();
-            _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter();
-            _wordingSettingPresenter = new ClassGeneratorWordingSettingPresenter(position, _disposable);
+            _container = new();
+            _commonPresenter = _container.Resolve<ClassGeneratorCommonPresenter>();
+            _commonModel = _container.Resolve<ClassGeneratorCommonModel>();
+            _presenter = _container.Resolve<ClassGeneratorPresenter>();
+            _folderSettingPresenter = _container.Resolve<ClassGeneratorFolderSettingPresenter>();
+            _wordingSettingPresenter = _container.Resolve<ClassGeneratorWordingSettingPresenter>();
             
+            Configure();
             SetEvent();
+        }
+
+        private void Configure()
+        {
+            _wordingSettingPresenter.Configure(position);
         }
 
         private void SetEvent()
         {
-            _selectedTabIndexProp
+            _commonModel.SelectedCategoryIndexProp
                 .Subscribe(UpdateData)
+                .AddTo(_disposable);
+            
+            _commonPresenter.OnCreateButtonClickedAsObservable
+                .Subscribe(_ => CreateFiles())
                 .AddTo(_disposable);
         }
         
         private void UpdateData(int index)
         {
-            switch (_selectedTabIndex)
+            switch (index)
             {
                 case 2:
                     _wordingSettingPresenter.UpdateData(_presenter.GetLayerSettingsList);
@@ -55,9 +68,9 @@ namespace Editor.ClassGenerator
 
         private void OnGUI()
         {
-            DrawTabs();
+            _commonPresenter.Draw();
             
-            switch (_selectedTabIndex)
+            switch (_commonModel.SelectedCategoryIndex)
             {
                 case 0:
                     _presenter.Draw(position);
@@ -71,29 +84,20 @@ namespace Editor.ClassGenerator
             }
         }
         
-        private void DrawTabs()
+        private void CreateFiles()
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            _selectedTabIndexProp.Value = GUILayout.Toolbar(_selectedTabIndex, _tabLabels, EditorStyles.toolbarButton);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Create Files", EditorStyles.toolbarButton, GUILayout.Width(80)))
-            {
-                var settingsFiles = _presenter.GetLayerSettingsList;
-                var hasPathSettingFiles = _folderSettingPresenter.GetLayerTypeAndPaths(settingsFiles);
-                var createFilesService = new ClassGeneratorCreateFilesService();
-                createFilesService.CreateFiles(hasPathSettingFiles);
-            }
-            EditorGUILayout.EndHorizontal();
+            var settingsFiles = _presenter.GetLayerSettingsList;
+            var hasPathSettingFiles = _folderSettingPresenter.GetLayerTypeAndPaths(settingsFiles);
+            var createFilesService = new ClassGeneratorCreateFilesService();
+            createFilesService.CreateFiles(hasPathSettingFiles);
         }
         
         private void OnDisable() => Dispose();
 
         public void Dispose()
         {
-            ((IDisposable)_folderSettingPresenter)?.Dispose();
-            ((IDisposable)_wordingSettingPresenter)?.Dispose();
-            _selectedTabIndexProp?.Dispose();
             _disposable?.Dispose();
+            ((IDisposable)_container).Dispose();
         }
     }
 }

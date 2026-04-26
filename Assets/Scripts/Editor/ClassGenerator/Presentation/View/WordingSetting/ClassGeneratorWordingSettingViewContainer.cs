@@ -24,20 +24,26 @@ namespace Editor.ClassGenerator
         
         private WordingSettingViewType _viewType = WordingSettingViewType.ImplementationDetails;
 
-        internal ClassGeneratorWordingSettingViewContainer(Rect windowPosition,
-            ClassGeneratorWordingSettingInfo info)
+        [EditorInject]
+        public ClassGeneratorWordingSettingViewContainer(ClassGeneratorSimpleDIContainer container)
         {
             _commonView = new CommonView();
-            _implementationDetailsView = new ImplementationDetailsView(info, windowPosition);
-            _classRequirementView = new ClassRequirementView(windowPosition);
+            _implementationDetailsView = container.Resolve<ImplementationDetailsView>();
+            _classRequirementView = container.Resolve<ClassRequirementView>();
         }
 
-        internal void UpdateData(IReadOnlyList<ClassGeneratorWordingSettingClassInfo> infos)
+        public void Configure(Rect windowPosition, ClassGeneratorWordingSettingInfo info)
+        {
+            _implementationDetailsView.Configure(info, windowPosition);
+            _classRequirementView.Configure(windowPosition);
+        }
+
+        public void UpdateData(IReadOnlyList<ClassGeneratorWordingSettingClassInfo> infos)
         {
             _classRequirementView.UpdateData(infos);
         }
         
-        internal void Draw()
+        public void Draw()
         {
             _commonView.Draw();
             switch (_viewType)
@@ -51,7 +57,7 @@ namespace Editor.ClassGenerator
             }
         }
 
-        internal void ChangeTab(int index)
+        public void ChangeTab(int index)
         {
             _viewType = (WordingSettingViewType)(index + 1);
         }

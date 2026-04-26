@@ -10,28 +10,37 @@ namespace Editor.ClassGenerator
     {
         private readonly ClassGeneratorWordingSettingViewContainer _viewContainer;
         private readonly ClassGeneratorWordingSettingTextAreaModel _textAreaModel;
-        private readonly ClassGeneratorWordingSettingCommonModel _commonModel;
+        private readonly ClassGeneratorWordingSettingModel _model;
         private readonly ClassIdFactory _classIdFactory;
-
-        internal ClassGeneratorWordingSettingPresenter(Rect windowPosition, CompositeDisposable disposable)
+        
+        
+        private readonly CompositeDisposable _disposable = new();
+        
+        [EditorInject]
+        public ClassGeneratorWordingSettingPresenter(ClassGeneratorSimpleDIContainer container)
         {
-            _textAreaModel = new ();
-            _viewContainer = new (windowPosition, _textAreaModel.ImplementationDetailsInfo);
-            _commonModel = new();
-            _classIdFactory = new ();
+            _textAreaModel = container.Resolve<ClassGeneratorWordingSettingTextAreaModel>();
+            _viewContainer = container.Resolve<ClassGeneratorWordingSettingViewContainer>();
+            _model = container.Resolve<ClassGeneratorWordingSettingModel>();
+            _classIdFactory = container.Resolve<ClassIdFactory>();
 
-            Bind(disposable);
+            Bind();
         }
 
-        private void Bind(CompositeDisposable disposable)
+        internal void Configure(Rect windowPosition)
+        {
+            _viewContainer.Configure(windowPosition, _textAreaModel.ImplementationDetailsInfo);
+        }
+
+        private void Bind()
         {
             _textAreaModel.UpdateClassInfosAsObservable
                 .Subscribe(_viewContainer.UpdateData)
-                .AddTo(disposable);
+                .AddTo(_disposable);
             
-            _commonModel.CurrentSelectedTabIndex
+            _model.CurrentSelectedTabIndex
                 .Subscribe(_viewContainer.ChangeTab)
-                .AddTo(disposable);
+                .AddTo(_disposable);
         }
 
         /// <summary>
@@ -49,8 +58,7 @@ namespace Editor.ClassGenerator
 
         void IDisposable.Dispose()
         {
-            ((IDisposable)_textAreaModel).Dispose();
-            ((IDisposable)_commonModel).Dispose();
+            _disposable.Dispose();
         }
     }
 }
