@@ -15,10 +15,11 @@ namespace Editor.ClassGenerator
         public Observable<Enum> OnLayerButtonClickedAsObservable => _layerView.OnLayerPathSettingButtonClickedAsObservable;
         public Observable<AppLayerType> OnLayerSeparateSettingsAsObservable => _layerView.OnLayerSeparateSettingsAsObservable;
 
-        public ClassGeneratorFolderSettingViewContainer()
+        [EditorInject]
+        public ClassGeneratorFolderSettingViewContainer(ClassGeneratorSimpleDIContainer container)
         {
-            _folderPathView = new ClassGeneratorFolderSettingFolderPathView();
-            _layerView = new ClassGeneratorFolderSettingLayerView();
+            _folderPathView = container.Resolve<ClassGeneratorFolderSettingFolderPathView>();
+            _layerView = container.Resolve<ClassGeneratorFolderSettingLayerView>();
         }
         
         private AppLayerType _selectedLayer = AppLayerType.None;
@@ -26,7 +27,7 @@ namespace Editor.ClassGenerator
         private readonly Subject<(ComponentRoleType, string)> _onSetFolderPathSubject = new();
         public Observable<(ComponentRoleType, string)> OnSetFolderPathAsObservable => _onSetFolderPathSubject;
         
-        internal void Draw(Rect windowPosition,
+        public void Draw(Rect windowPosition,
             IReadOnlyDictionary<AppLayerType, string> layerPathDict,
             IReadOnlyDictionary<ComponentRoleType, string> componentRoleSettingsDict,
             IReadOnlyDictionary<AppLayerType, bool> isSeparateSettingsDict,

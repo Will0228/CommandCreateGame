@@ -8,10 +8,11 @@ namespace Editor.ClassGenerator
         private readonly ClassGeneratorModel _model;
         private readonly ClassGeneratorView _view;
         
-        public ClassGeneratorPresenter()
+        [EditorInject]
+        public ClassGeneratorPresenter(ClassGeneratorSimpleDIContainer container)
         {
-            _model = new ClassGeneratorModel();
-            _view = new ClassGeneratorView();
+            _model = container.Resolve<ClassGeneratorModel>();
+            _view = container.Resolve<ClassGeneratorView>();
         }
         
         public void Draw(Rect windowPosition)

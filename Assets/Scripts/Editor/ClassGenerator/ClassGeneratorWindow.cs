@@ -1,19 +1,23 @@
 using System;
+using R3;
 using UnityEditor;
 using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorWindow : EditorWindow
+    internal sealed class ClassGeneratorWindow : EditorWindow, IDisposable
     {
+        private ClassGeneratorSimpleDIContainer _container;
+        
+        private ClassGeneratorCommonPresenter _commonPresenter;
+        private ClassGeneratorCommonModel _commonModel;
+        
         private ClassGeneratorPresenter _presenter;
         private ClassGeneratorFolderSettingPresenter _folderSettingPresenter;
+        private ClassGeneratorWordingSettingPresenter _wordingSettingPresenter;
         
-        // タブの状態管理
-        private int _selectedTabIndex = 0;
-        private readonly string[] _tabLabels = { "Generator", "Folder Settings", "History" };
-
-
+        private readonly CompositeDisposable _disposable = new();
+        
         [MenuItem("Tools/Class Generator")]
         public static void ShowWindow()
         {
@@ -23,44 +27,77 @@ namespace Editor.ClassGenerator
 
         private void OnEnable()
         {
-            _presenter = new ClassGeneratorPresenter();
+            _container = new();
+            _commonPresenter = _container.Resolve<ClassGeneratorCommonPresenter>();
+            _commonModel = _container.Resolve<ClassGeneratorCommonModel>();
+            _presenter = _container.Resolve<ClassGeneratorPresenter>();
+            _folderSettingPresenter = _container.Resolve<ClassGeneratorFolderSettingPresenter>();
+            _wordingSettingPresenter = _container.Resolve<ClassGeneratorWordingSettingPresenter>();
+            
+            Configure();
+            SetEvent();
+        }
 
-            _folderSettingPresenter = new ClassGeneratorFolderSettingPresenter();
+        private void Configure()
+        {
+            _wordingSettingPresenter.Configure(position);
+        }
+
+        private void SetEvent()
+        {
+            _commonModel.SelectedCategoryIndexProp
+                .Subscribe(UpdateData)
+                .AddTo(_disposable);
+            
+            _commonPresenter.OnCreateButtonClickedAsObservable
+                .Subscribe(_ => CreateFiles())
+                .AddTo(_disposable);
         }
         
-        private void OnDisable()
+        private void UpdateData(int index)
         {
-            ((IDisposable)_folderSettingPresenter).Dispose();
+            switch (index)
+            {
+                case 2:
+                    _wordingSettingPresenter.UpdateData(_presenter.GetLayerSettingsList);
+                    break;
+                default:
+                    break; // 一旦何もしない
+            }
         }
 
         private void OnGUI()
         {
-            DrawTabs();
+            _commonPresenter.Draw();
             
-            switch (_selectedTabIndex)
+            switch (_commonModel.SelectedCategoryIndex)
             {
-                case 0: // Generator
+                case 0:
                     _presenter.Draw(position);
                     break;
-                case 1: // Settings
+                case 1:
                     _folderSettingPresenter.Draw(position);
+                    break;
+                case 2:
+                    _wordingSettingPresenter.Draw();
                     break;
             }
         }
         
-        private void DrawTabs()
+        private void CreateFiles()
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            _selectedTabIndex = GUILayout.Toolbar(_selectedTabIndex, _tabLabels, EditorStyles.toolbarButton);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Create Files", EditorStyles.toolbarButton, GUILayout.Width(80)))
-            {
-                var settingsFiles = _presenter.GetLayerSettingsList;
-                var hasPathSettingFiles = _folderSettingPresenter.GetLayerTypeAndPaths(settingsFiles);
-                var createFilesService = new ClassGeneratorCreateFilesService();
-                createFilesService.CreateFiles(hasPathSettingFiles);
-            }
-            EditorGUILayout.EndHorizontal();
+            var settingsFiles = _presenter.GetLayerSettingsList;
+            var hasPathSettingFiles = _folderSettingPresenter.GetLayerTypeAndPaths(settingsFiles);
+            var createFilesService = new ClassGeneratorCreateFilesService();
+            createFilesService.CreateFiles(hasPathSettingFiles);
+        }
+        
+        private void OnDisable() => Dispose();
+
+        public void Dispose()
+        {
+            _disposable?.Dispose();
+            ((IDisposable)_container).Dispose();
         }
     }
 }
