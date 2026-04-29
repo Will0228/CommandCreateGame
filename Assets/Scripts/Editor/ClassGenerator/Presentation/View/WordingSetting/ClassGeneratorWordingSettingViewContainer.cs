@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using R3;
 
 using CommonView = Editor.ClassGenerator.ClassGeneratorWordingSettingCommonView;
 using ImplementationDetailsView = Editor.ClassGenerator.ClassGeneratorWordingSettingImplementationDetailsView;
@@ -24,6 +25,8 @@ namespace Editor.ClassGenerator
         private readonly ClassRequirementView _classRequirementView;
         
         private WordingSettingViewType _viewType = WordingSettingViewType.ImplementationDetails;
+        
+        public Observable<int> OnChangeTabIndexProp => _commonView.OnChangeTabIndexProp;
 
         [EditorInject]
         public ClassGeneratorWordingSettingViewContainer(ClassGeneratorSimpleDIContainer container)

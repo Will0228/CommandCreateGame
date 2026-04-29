@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using UnityEditor;
-using UnityEngine;
 
 namespace Editor.ClassGenerator
 {
@@ -13,6 +9,7 @@ namespace Editor.ClassGenerator
         [Serializable]
         internal class LayerSettings
         {
+            internal int Id;
             internal string Label;
             internal readonly List<string> ClassNames = new();
             internal string Suffix;
@@ -24,6 +21,8 @@ namespace Editor.ClassGenerator
                 Label = label;
                 Suffix = suffix;
             }
+            
+            public bool IsType(ComponentRoleType type) => Type == type;
         }
         
         public string NamespaceName = "YourProject.Domain";
@@ -31,10 +30,8 @@ namespace Editor.ClassGenerator
         private readonly Dictionary<AppLayerType, List<LayerSettings>> _layers;
         public IReadOnlyDictionary<AppLayerType, List<LayerSettings>> Layers => _layers;
         public IReadOnlyList<LayerSettings> LayerSettingsList
-            => _layers.Values.SelectMany(layerSettingsList =>layerSettingsList.Where(layerSettings => layerSettings.ClassNames.Any())).ToList();
+            => _layers.Values.SelectMany(layerSettingsList =>layerSettingsList.Where(layerSettings => layerSettings.ClassNames.Any()).ToList()).ToList();
         
-        private readonly Dictionary<ComponentRoleType, bool> _isGeneratedClassDict = new();
-        public bool IsExistGeneratedClass(ComponentRoleType componentRoleType) => _isGeneratedClassDict[componentRoleType];
 
         public ClassGeneratorModel()
         {
@@ -45,6 +42,32 @@ namespace Editor.ClassGenerator
                 { AppLayerType.Domain, new List<LayerSettings> { new(ComponentRoleType.Entity, "Entity", "Entity"), new(ComponentRoleType.ValueObject, "ValueObject", "Vo"), new(ComponentRoleType.DataTransferObject, "DataTransferObject", "Dto"), new(ComponentRoleType.RepositoryInterface, "Repository Interface", "Repository") } },
                 { AppLayerType.Infrastructure, new List<LayerSettings> { new(ComponentRoleType.RepositoryImplementation, "Repository Impl", "Repository") } }
             };
+        }
+
+        public void AddClass(ComponentRoleType componentRoleType)
+        {
+            foreach (var settings in _layers[componentRoleType.GetLayerType()])
+            {
+                if(settings.IsType(componentRoleType))
+                {
+                    settings.ClassNames.Add("");
+                    break;
+                }
+            }
+        }
+
+        public void RemoveClass((ComponentRoleType componentRoleType, int id) data)
+        {
+            _layers[data.componentRoleType.GetLayerType()]
+                .First(settings => settings.IsType(data.componentRoleType))
+                .ClassNames.RemoveAt(data.id);
+        }
+
+        public void RenameClass((ComponentRoleType componentRoleType, int id, string newName) data)
+        {
+            _layers[data.componentRoleType.GetLayerType()]
+                .First(settings => settings.IsType(data.componentRoleType))
+                .ClassNames[data.id] = data.newName;
         }
     }
 }

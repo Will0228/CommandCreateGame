@@ -13,7 +13,6 @@ namespace Editor.ClassGenerator
             _currentSelectedTabIndexProp.Value = selectedTabIndex;
         }
 
-
         void IDisposable.Dispose()
         {
             _currentSelectedTabIndexProp.Dispose();

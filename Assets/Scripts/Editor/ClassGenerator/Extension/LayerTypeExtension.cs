@@ -18,5 +18,14 @@ namespace Editor.ClassGenerator
                 _ => "Unknown"
             };
         }
+        
+        internal static AppLayerType GetLayerType(this ComponentRoleType type)
+        {
+            if (type.HasFlag(ComponentRoleType.PresentationMask)) return AppLayerType.Presentation;
+            if (type.HasFlag(ComponentRoleType.ApplicationMask)) return AppLayerType.Application;
+            if (type.HasFlag(ComponentRoleType.DomainMask)) return AppLayerType.Domain;
+            if (type.HasFlag(ComponentRoleType.InfrastructureMask)) return AppLayerType.Infrastructure;
+            return AppLayerType.None;
+        }
     }
 }

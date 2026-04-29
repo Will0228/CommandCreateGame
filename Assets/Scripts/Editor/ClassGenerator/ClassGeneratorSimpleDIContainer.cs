@@ -44,7 +44,7 @@ namespace Editor.ClassGenerator
             Register<ClassGeneratorFolderSettingLayerModel>();
             Register<ClassGeneratorFolderSettingPathModel>();
             
-            Register<ClassIdFactory>();
+            Register<ClassKeyFactory>();
             
             
             WarmUp();

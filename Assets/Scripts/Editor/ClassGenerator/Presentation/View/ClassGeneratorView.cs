@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using R3;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,9 +8,18 @@ using LayerSettings = Editor.ClassGenerator.ClassGeneratorModel.LayerSettings;
 
 namespace Editor.ClassGenerator
 {
-    internal sealed class ClassGeneratorView
+    internal sealed class ClassGeneratorView : IDisposable
     {
         private Vector2 _scrollPosition;
+
+        private readonly Subject<ComponentRoleType> _onAddClassSubject = new();
+        public Observable<ComponentRoleType> OnAddClassAsObservable => _onAddClassSubject;
+        
+        private readonly Subject<(ComponentRoleType role, int id)> _onRemoveClassSubject = new();
+        public Observable<(ComponentRoleType role, int id)> OnRemoveClassAsObservable => _onRemoveClassSubject;
+        
+        private readonly Subject<(ComponentRoleType role, int id, string name)> _onRenameClassSubject = new();
+        public Observable<(ComponentRoleType role, int id, string name)> OnRenameClassAsObservable => _onRenameClassSubject;
         
         public void Draw(Rect windowPosition, 
             IReadOnlyDictionary<AppLayerType, List<LayerSettings>> layers,
@@ -90,7 +101,8 @@ namespace Editor.ClassGenerator
                 {
                     if (GUILayout.Button("+", GUILayout.Width(25)))
                     {
-                        setting.ClassNames.Add(""); GUI.FocusControl(null);
+                        _onAddClassSubject.OnNext(setting.Type);
+                        GUI.FocusControl(null);
                     }
                     EditorGUILayout.LabelField(setting.Type.GetName(), GUILayout.Width(150));
                     // 余白を埋める（これを入れると、以降の要素が左寄せになります）
@@ -104,11 +116,15 @@ namespace Editor.ClassGenerator
                     for (int i = 0; i < setting.ClassNames.Count; i++)
                     {
                         EditorGUILayout.BeginHorizontal();
-                        setting.ClassNames[i] = EditorGUILayout.TextField(setting.ClassNames[i]);
-
+                        var newName = EditorGUILayout.TextField(setting.ClassNames[i]);
+                        if (setting.ClassNames[i] != newName)
+                        {
+                            _onRenameClassSubject.OnNext((setting.Type, i, newName));
+                        }
+                        
                         if (GUILayout.Button("-", GUILayout.Width(25)))
                         {
-                            setting.ClassNames.RemoveAt(i); 
+                            _onRemoveClassSubject.OnNext((setting.Type, i));
                             EditorGUILayout.EndHorizontal();
                             break;
                         }
@@ -136,6 +152,13 @@ namespace Editor.ClassGenerator
         {
             var r = GUILayoutUtility.GetRect(0, 1, GUILayout.ExpandWidth(true));
             EditorGUI.DrawRect(r, new Color(0.12f, 0.12f, 0.12f));
+        }
+
+        void IDisposable.Dispose()
+        {
+            _onAddClassSubject.Dispose();
+            _onRemoveClassSubject.Dispose();
+            _onRenameClassSubject.Dispose();
         }
     }
 }

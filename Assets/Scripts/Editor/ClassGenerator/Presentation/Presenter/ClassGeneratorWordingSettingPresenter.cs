@@ -11,8 +11,7 @@ namespace Editor.ClassGenerator
         private readonly ClassGeneratorWordingSettingViewContainer _viewContainer;
         private readonly ClassGeneratorWordingSettingTextAreaModel _textAreaModel;
         private readonly ClassGeneratorWordingSettingModel _model;
-        private readonly ClassIdFactory _classIdFactory;
-        
+        private readonly ClassKeyFactory _classKeyFactory;
         
         private readonly CompositeDisposable _disposable = new();
         
@@ -22,7 +21,7 @@ namespace Editor.ClassGenerator
             _textAreaModel = container.Resolve<ClassGeneratorWordingSettingTextAreaModel>();
             _viewContainer = container.Resolve<ClassGeneratorWordingSettingViewContainer>();
             _model = container.Resolve<ClassGeneratorWordingSettingModel>();
-            _classIdFactory = container.Resolve<ClassIdFactory>();
+            _classKeyFactory = container.Resolve<ClassKeyFactory>();
 
             Bind();
         }
@@ -34,6 +33,10 @@ namespace Editor.ClassGenerator
 
         private void Bind()
         {
+            _viewContainer.OnChangeTabIndexProp
+                .Subscribe(_model.UpdateTab)
+                .AddTo(_disposable);
+            
             _textAreaModel.UpdateClassInfosAsObservable
                 .Subscribe(_viewContainer.UpdateData)
                 .AddTo(_disposable);
@@ -48,7 +51,7 @@ namespace Editor.ClassGenerator
         /// </summary>
         internal void UpdateData(IReadOnlyList<ClassGeneratorModel.LayerSettings> settingsList)
         {
-            _textAreaModel.UpdateData(settingsList.ToDictionary(settings => _classIdFactory.Create(settings), settings => settings.Type));
+            _textAreaModel.UpdateData(settingsList.SelectMany(settings => _classKeyFactory.Creates(settings)).ToList());
         }
 
         internal void Draw(Rect windowPosition)

@@ -17,25 +17,9 @@ namespace Editor.ClassGenerator
 
         private readonly Subject<Unit> _onCreateButtonClickedSubject = new();
         public Observable<Unit> OnCreateButtonClickedAsObservable => _onCreateButtonClickedSubject.AsObservable();
-        
-        public ClassGeneratorCommonView()
-        {
-            // var labels = new string[] { "Generator", "Folder Settings", "Wording Settings" };
-            // _categorySelectToolbarEmitter = new(labels);
-        }
 
         public void Draw(int currentCategoryIndex)
         {
-            // EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            // _categorySelectToolbarEmitter.Draw(currentCategoryIndex);
-            // GUILayout.FlexibleSpace();
-            // if (GUILayout.Button("Create Files", EditorStyles.toolbarButton, GUILayout.Width(80)))
-            // {
-            //     _onCreateButtonClickedSubject.OnNext(Unit.Default);
-            // }
-            //
-            // EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.BeginVertical();
             {
                 DrawTabButton(currentCategoryIndex);
@@ -56,7 +40,7 @@ namespace Editor.ClassGenerator
 
                 if (i == currentCategoryIndex)
                 {
-                    GUI.backgroundColor = new Color(0.7f, 0.7f, 0.7f);
+                    GUI.backgroundColor = new Color(0.7f, 0.2f, 0.2f);
                 }
                 else
                 {

@@ -13,7 +13,7 @@ namespace Editor.ClassGenerator
         private readonly string[] _tabLabels = { "Implementation Details", "Class Details" };
         
         private readonly ReactiveProperty<int> _onChangeTabIndexProp = new();
-        public ReadOnlyReactiveProperty<int> OnChangeTabIndexProp => _onChangeTabIndexProp;
+        public Observable<int> OnChangeTabIndexProp => _onChangeTabIndexProp.AsObservable();
         
         internal void Draw()
         {
