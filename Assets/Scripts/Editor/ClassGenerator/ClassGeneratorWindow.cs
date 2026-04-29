@@ -40,7 +40,7 @@ namespace Editor.ClassGenerator
 
         private void Configure()
         {
-            _wordingSettingPresenter.Configure(position);
+            _wordingSettingPresenter.Configure();
         }
 
         private void SetEvent()
@@ -68,20 +68,24 @@ namespace Editor.ClassGenerator
 
         private void OnGUI()
         {
-            _commonPresenter.Draw();
-            
-            switch (_commonModel.SelectedCategoryIndex)
+            EditorGUILayout.BeginHorizontal();
             {
-                case 0:
-                    _presenter.Draw(position);
-                    break;
-                case 1:
-                    _folderSettingPresenter.Draw(position);
-                    break;
-                case 2:
-                    _wordingSettingPresenter.Draw();
-                    break;
+                _commonPresenter.Draw();
+                
+                switch (_commonModel.SelectedCategoryIndex)
+                {
+                    case 0:
+                        _presenter.Draw(position);
+                        break;
+                    case 1:
+                        _folderSettingPresenter.Draw(position);
+                        break;
+                    case 2:
+                        _wordingSettingPresenter.Draw(position);
+                        break;
+                }
             }
+            EditorGUILayout.EndHorizontal();
         }
         
         private void CreateFiles()

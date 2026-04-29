@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 using CommonView = Editor.ClassGenerator.ClassGeneratorWordingSettingCommonView;
@@ -32,10 +33,9 @@ namespace Editor.ClassGenerator
             _classRequirementView = container.Resolve<ClassRequirementView>();
         }
 
-        public void Configure(Rect windowPosition, ClassGeneratorWordingSettingInfo info)
+        public void Configure(ClassGeneratorWordingSettingInfo info)
         {
-            _implementationDetailsView.Configure(info, windowPosition);
-            _classRequirementView.Configure(windowPosition);
+            _implementationDetailsView.Configure(info);
         }
 
         public void UpdateData(IReadOnlyList<ClassGeneratorWordingSettingClassInfo> infos)
@@ -43,18 +43,22 @@ namespace Editor.ClassGenerator
             _classRequirementView.UpdateData(infos);
         }
         
-        public void Draw()
+        public void Draw(Rect windowPosition)
         {
-            _commonView.Draw();
-            switch (_viewType)
+            EditorGUILayout.BeginVertical();
             {
-                case WordingSettingViewType.ImplementationDetails:
-                    _implementationDetailsView.Draw();
-                    break;
-                case WordingSettingViewType.RequirementsPerClass:
-                    _classRequirementView.Draw();
-                    break;
+                _commonView.Draw();
+                switch (_viewType)
+                {
+                    case WordingSettingViewType.ImplementationDetails:
+                        _implementationDetailsView.Draw(windowPosition);
+                        break;
+                    case WordingSettingViewType.RequirementsPerClass:
+                        _classRequirementView.Draw(windowPosition);
+                        break;
+                }
             }
+            EditorGUILayout.EndVertical();
         }
 
         public void ChangeTab(int index)

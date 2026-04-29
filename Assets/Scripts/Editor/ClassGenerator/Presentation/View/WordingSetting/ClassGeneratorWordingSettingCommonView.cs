@@ -17,7 +17,7 @@ namespace Editor.ClassGenerator
         
         internal void Draw()
         {
-            using(EditorGUILayoutExtension.CreateEditorGUILayoutScope(EditorStyles.toolbar))
+            using(EditorGUILayoutExtension.CreateEditorGUIHorizontalLayoutScope(EditorStyles.toolbar))
             {
                 _onChangeTabIndexProp.Value = GUILayout.Toolbar(_onChangeTabIndexProp.Value, _tabLabels, EditorStyles.toolbarButton);
             }

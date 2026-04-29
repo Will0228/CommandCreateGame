@@ -27,9 +27,9 @@ namespace Editor.ClassGenerator
             Bind();
         }
 
-        internal void Configure(Rect windowPosition)
+        internal void Configure()
         {
-            _viewContainer.Configure(windowPosition, _textAreaModel.ImplementationDetailsInfo);
+            _viewContainer.Configure(_textAreaModel.ImplementationDetailsInfo);
         }
 
         private void Bind()
@@ -51,9 +51,9 @@ namespace Editor.ClassGenerator
             _textAreaModel.UpdateData(settingsList.ToDictionary(settings => _classIdFactory.Create(settings), settings => settings.Type));
         }
 
-        internal void Draw()
+        internal void Draw(Rect windowPosition)
         {
-            _viewContainer.Draw();
+            _viewContainer.Draw(windowPosition);
         }
 
         void IDisposable.Dispose()
