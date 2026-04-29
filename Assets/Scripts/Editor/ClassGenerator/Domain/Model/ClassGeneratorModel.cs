@@ -30,7 +30,7 @@ namespace Editor.ClassGenerator
         private readonly Dictionary<AppLayerType, List<LayerSettings>> _layers;
         public IReadOnlyDictionary<AppLayerType, List<LayerSettings>> Layers => _layers;
         public IReadOnlyList<LayerSettings> LayerSettingsList
-            => _layers.Values.SelectMany(layerSettingsList =>layerSettingsList.Where(layerSettings => layerSettings.ClassNames.Any())).ToList();
+            => _layers.Values.SelectMany(layerSettingsList =>layerSettingsList.Where(layerSettings => layerSettings.ClassNames.Any()).ToList()).ToList();
         
 
         public ClassGeneratorModel()
