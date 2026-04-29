@@ -14,44 +14,48 @@ namespace Editor.ClassGenerator
             IReadOnlyDictionary<AppLayerType, List<LayerSettings>> layers,
             string nameSpace)
         {
-            DrawToolbar(nameSpace);
+            EditorGUILayout.BeginVertical();
+            {
+                DrawToolbar(nameSpace);
 
-            var halfWidth = windowPosition.width / 2f - 2f;
-            var halfHeight = (windowPosition.height - 35f) / 2f;
+                var halfWidth = windowPosition.width / 2f - 2f;
+                var halfHeight = (windowPosition.height - 35f) / 2f;
 
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+                _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+                {
+                    // 上段プレゼンテーション層とアプリケーション層を実装
+                    EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
+                    {
+                        DrawLayerArea("Presentation", layers[AppLayerType.Presentation], halfWidth);
+                        DrawVerticalLine();
+                        DrawLayerArea("Application", layers[AppLayerType.Application], halfWidth);
+                    }
+                    EditorGUILayout.EndHorizontal();
 
-            // 上段プレゼンテーション層とアプリケーション層を実装
-            EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
-            DrawLayerArea("Presentation", layers[AppLayerType.Presentation], halfWidth);
-            DrawVerticalLine();
-            DrawLayerArea("Application", layers[AppLayerType.Application], halfWidth);
-            EditorGUILayout.EndHorizontal();
+                    DrawHorizontalLine();
 
-            DrawHorizontalLine();
-
-            // 下段ドメイン層とインフラ層を実装
-            EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
-            DrawLayerArea("Domain", layers[AppLayerType.Domain], halfWidth);
-            DrawVerticalLine();
-            DrawLayerArea("Infrastructure", layers[AppLayerType.Infrastructure], halfWidth);
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndScrollView();
+                    // 下段ドメイン層とインフラ層を実装
+                    EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
+                    {
+                        DrawLayerArea("Domain", layers[AppLayerType.Domain], halfWidth);
+                        DrawVerticalLine();
+                        DrawLayerArea("Infrastructure", layers[AppLayerType.Infrastructure], halfWidth);
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+                EditorGUILayout.EndScrollView();
+            }
+            EditorGUILayout.EndVertical();
         }
 
         private void DrawToolbar(string nameSpace)
         {
-            EditorGUILayout.BeginVertical(EditorStyles.toolbar);
+            EditorGUILayout.BeginHorizontal();
             {
-                EditorGUILayout.BeginHorizontal();
-                {
-                    EditorGUILayout.LabelField("Class Generator", EditorStyles.boldLabel, GUILayout.Width(120));
-                    EditorGUILayout.TextField("Namespace", nameSpace);
-                }
-                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.LabelField("Class Generator", EditorStyles.boldLabel, GUILayout.Width(120));
+                EditorGUILayout.TextField("Namespace", nameSpace);
             }
-            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndHorizontal();
         }
 
         /// <summary>
@@ -60,16 +64,20 @@ namespace Editor.ClassGenerator
         private void DrawLayerArea(string title, List<LayerSettings> settings, float width)
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(width), GUILayout.ExpandHeight(true));
-            GUI.backgroundColor = new Color(0.25f, 0.25f, 0.25f);
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            GUI.backgroundColor = Color.white;
-            EditorGUILayout.LabelField(title, EditorStyles.whiteBoldLabel);
-            EditorGUILayout.EndVertical();
-
-            foreach (var setting in settings)
             {
-                DrawSettingCard(setting);
-                EditorGUILayout.Space(2);
+                GUI.backgroundColor = new Color(0.25f, 0.25f, 0.25f);
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                {
+                    GUI.backgroundColor = Color.white;
+                    EditorGUILayout.LabelField(title, EditorStyles.whiteBoldLabel);
+                }
+                EditorGUILayout.EndVertical();
+
+                foreach (var setting in settings)
+                {
+                    DrawSettingCard(setting);
+                    EditorGUILayout.Space(2);
+                }
             }
             EditorGUILayout.EndVertical();
         }
@@ -77,35 +85,37 @@ namespace Editor.ClassGenerator
         private void DrawSettingCard(LayerSettings setting)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-            EditorGUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("+", GUILayout.Width(25)))
             {
-                setting.ClassNames.Add(""); GUI.FocusControl(null);
-            }
-            EditorGUILayout.LabelField(setting.Type.GetName(), GUILayout.Width(150));
-            // 余白を埋める（これを入れると、以降の要素が左寄せになります）
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
-
-            if (setting.ClassNames.Count > 0)
-            {
-                EditorGUI.indentLevel++;
-                for (int i = 0; i < setting.ClassNames.Count; i++)
+                EditorGUILayout.BeginHorizontal();
                 {
-                    EditorGUILayout.BeginHorizontal();
-                    setting.ClassNames[i] = EditorGUILayout.TextField(setting.ClassNames[i]);
-
-                    if (GUILayout.Button("-", GUILayout.Width(25)))
+                    if (GUILayout.Button("+", GUILayout.Width(25)))
                     {
-                        setting.ClassNames.RemoveAt(i); 
-                        EditorGUILayout.EndHorizontal();
-                        break;
+                        setting.ClassNames.Add(""); GUI.FocusControl(null);
                     }
-                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.LabelField(setting.Type.GetName(), GUILayout.Width(150));
+                    // 余白を埋める（これを入れると、以降の要素が左寄せになります）
+                    GUILayout.FlexibleSpace();
                 }
-                EditorGUI.indentLevel--;
+                EditorGUILayout.EndHorizontal();
+
+                if (setting.ClassNames.Count > 0)
+                {
+                    EditorGUI.indentLevel++;
+                    for (int i = 0; i < setting.ClassNames.Count; i++)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        setting.ClassNames[i] = EditorGUILayout.TextField(setting.ClassNames[i]);
+
+                        if (GUILayout.Button("-", GUILayout.Width(25)))
+                        {
+                            setting.ClassNames.RemoveAt(i); 
+                            EditorGUILayout.EndHorizontal();
+                            break;
+                        }
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    EditorGUI.indentLevel--;
+                }
             }
             EditorGUILayout.EndVertical();
         }

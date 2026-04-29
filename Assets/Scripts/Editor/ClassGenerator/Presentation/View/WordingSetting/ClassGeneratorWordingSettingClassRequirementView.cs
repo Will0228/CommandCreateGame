@@ -16,8 +16,6 @@ namespace Editor.ClassGenerator
         
         private const float LABEL_WIDTH = 200f;
 
-        private float _halfWidth;
-        private float _halfHeight;
         // 配列はレイヤー層のため
         // 0 = プレゼンテーション層, 1 = アプリケーション層, 2 = ドメイン層, 3 = インフラ層
         private readonly List<CellView>[] _cellViewsArray = new List<CellView>[4];
@@ -28,12 +26,6 @@ namespace Editor.ClassGenerator
             {
                 _cellViewsArray[i] = new List<CellView>();
             }
-        }
-
-        public void Configure(Rect windowPosition)
-        {
-            _halfWidth = windowPosition.width / 2f;
-            _halfHeight = windowPosition.height / 2f;
         }
 
         /// <summary>
@@ -66,24 +58,27 @@ namespace Editor.ClassGenerator
             }
         }
         
-        public void Draw()
+        public void Draw(Rect windowPosition)
         {
+            var halfWidth = windowPosition.width / 2f;
+            var halfHeight = windowPosition.height / 2f;
+            
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
             
             // 上段プレゼンテーション層とアプリケーション層を実装
-            EditorGUILayout.BeginHorizontal(GUILayout.Height(_halfHeight));
-            DrawLayerArea("Presentation", _cellViewsArray[0], _halfWidth);
+            EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
+            DrawLayerArea("Presentation", _cellViewsArray[0], halfWidth);
             DrawVerticalLine();
-            DrawLayerArea("Application", _cellViewsArray[1], _halfWidth);
+            DrawLayerArea("Application", _cellViewsArray[1], halfWidth);
             EditorGUILayout.EndHorizontal();
 
             DrawHorizontalLine();
 
             // 下段ドメイン層とインフラ層を実装
-            EditorGUILayout.BeginHorizontal(GUILayout.Height(_halfHeight));
-            DrawLayerArea("Domain", _cellViewsArray[2], _halfWidth);
+            EditorGUILayout.BeginHorizontal(GUILayout.Height(halfHeight));
+            DrawLayerArea("Domain", _cellViewsArray[2], halfWidth);
             DrawVerticalLine();
-            DrawLayerArea("Infrastructure", _cellViewsArray[3], _halfWidth);
+            DrawLayerArea("Infrastructure", _cellViewsArray[3], halfWidth);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndScrollView();

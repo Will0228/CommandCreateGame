@@ -10,8 +10,6 @@ namespace Editor.ClassGenerator
     {
         private readonly ClassGeneratorWordingSettingTextAreaView _textAreaView;
         private readonly ClassGeneratorWordingSettingApplyTemplateView _applyTemplateView;
-
-        private float _halfWidth;
         
         public ClassGeneratorWordingSettingImplementationDetailsView()
         {
@@ -19,18 +17,17 @@ namespace Editor.ClassGenerator
             _applyTemplateView = new ClassGeneratorWordingSettingApplyTemplateView();
         }
 
-        public void Configure(ClassGeneratorWordingSettingInfo info, Rect windowPosition)
+        public void Configure(ClassGeneratorWordingSettingInfo info)
         {
-            _halfWidth = windowPosition.width / 2;
             _textAreaView.Configure(info);
         }
         
-        public void Draw()
+        public void Draw(Rect windowPosition)
         {
             EditorGUILayout.BeginHorizontal();
             {
                 _textAreaView.Draw();
-                _applyTemplateView.Draw(_halfWidth);
+                _applyTemplateView.Draw(windowPosition.width / 2);
             }
             EditorGUILayout.EndHorizontal();
         }
