@@ -13,7 +13,6 @@ namespace Editor.ClassGenerator
         private readonly ClassGeneratorWordingSettingModel _model;
         private readonly ClassIdFactory _classIdFactory;
         
-        
         private readonly CompositeDisposable _disposable = new();
         
         [EditorInject]
@@ -34,6 +33,10 @@ namespace Editor.ClassGenerator
 
         private void Bind()
         {
+            _viewContainer.OnChangeTabIndexProp
+                .Subscribe(_model.UpdateTab)
+                .AddTo(_disposable);
+            
             _textAreaModel.UpdateClassInfosAsObservable
                 .Subscribe(_viewContainer.UpdateData)
                 .AddTo(_disposable);

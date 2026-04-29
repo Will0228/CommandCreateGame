@@ -47,10 +47,10 @@ namespace Editor.ClassGenerator
             {
                 var targetList = info.ComponentRoleType switch
                 {
-                    ComponentRoleType.PresentationMask => _cellViewsArray[0],
-                    ComponentRoleType.ApplicationMask => _cellViewsArray[1],
-                    ComponentRoleType.DomainMask => _cellViewsArray[2],
-                    ComponentRoleType.InfrastructureMask => _cellViewsArray[3],
+                    var role when role.HasFlag(ComponentRoleType.PresentationMask) => _cellViewsArray[0],
+                    var role when role.HasFlag(ComponentRoleType.ApplicationMask) => _cellViewsArray[1],
+                    var role when role.HasFlag(ComponentRoleType.DomainMask) => _cellViewsArray[2],
+                    var  role when role.HasFlag(ComponentRoleType.InfrastructureMask) => _cellViewsArray[3],
                     _ => throw new ArgumentOutOfRangeException($"{info.ComponentRoleType} is not a valid component role"),
                 };
                 
@@ -82,20 +82,6 @@ namespace Editor.ClassGenerator
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndScrollView();
-        }
-
-        private void DrawToolbar(string nameSpace)
-        {
-            EditorGUILayout.BeginVertical(EditorStyles.toolbar);
-            {
-                EditorGUILayout.BeginHorizontal();
-                {
-                    EditorGUILayout.LabelField("Class Generator", EditorStyles.boldLabel, GUILayout.Width(120));
-                    EditorGUILayout.TextField("Namespace", nameSpace);
-                }
-                EditorGUILayout.EndHorizontal();
-            }
-            EditorGUILayout.EndVertical();
         }
 
         /// <summary>
