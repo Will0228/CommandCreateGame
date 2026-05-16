@@ -4,10 +4,19 @@ on:
   push :
 
   workflow_dispatch: 
+    inputs:
+      CONFIGUREATION:
+        description: '構成の選択'
+        required: true
+        default: Debug
+        type: choice
+        options:
+          - Debug
+          - Release
 
 jobs:
   Example:
       runs-on: macos-latest
 
       steps:
-        - run: echo "Hello, World"
+        - run: echo "{{inputs.CONFIGURATION}}"
