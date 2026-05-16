@@ -4,7 +4,7 @@ on: push
 
 jobs:
   Example:
-      runs-on: maxos-latest
+      runs-on: macos-latest
 
       steps:
         -run: echo "Hello, World"
