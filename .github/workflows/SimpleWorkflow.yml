@@ -16,7 +16,8 @@ on:
 
 jobs:
   Example:
-      runs-on: macos-latest
+    runs-on: ubuntu-latest
 
-      steps:
-        - run: echo "${{ inputs.CONFIGURATION }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/sample
