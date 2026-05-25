@@ -14,20 +14,20 @@ on:
           - Debug
           - Release
 
+env:
+    DRAGON: I'm Dragon
+    
 jobs:
-  Example:
+  # 自作アクションと定義済みアクションテスト
+  CreateActionJob:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/sample
 
-# 変数を使用する
-env:
-  DRAGON: I'm Dragon
-
-jobs:
-  Example1:
+  # 変数を使用する
+  UseEnvJob:
     runs-on: ubuntu-latest
     
     env:
