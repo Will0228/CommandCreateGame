@@ -1,0 +1,24 @@
+name: Env Handler Custom Action
+description: '環境変数や入力を受け取って実行する自作アクションのテスト'
+
+
+inputs:
+  witch:
+    description: 'Witchのセリフ'
+    required: false
+    default: "I'm Witch"
+
+runs:
+  using: "composite"
+  env:
+    DRAGON: I'm Dragon
+    OGRE: I'm Ogre
+
+  steps:
+    - name: Who are you? 
+      env:
+        WITCH: ${{ inputs.witch }}
+      run: |
+        echo "DRAGON=$DRAGON"
+        echo "OGRE = ${{ env.OGRE }}"
+        echo "WITCH=$WITCH"

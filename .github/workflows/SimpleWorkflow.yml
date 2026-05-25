@@ -13,9 +13,6 @@ on:
         options:
           - Debug
           - Release
-
-env:
-    DRAGON: I'm Dragon
     
 jobs:
   # 自作アクションと定義済みアクションテスト
@@ -29,15 +26,10 @@ jobs:
   # 変数を使用する
   UseEnvJob:
     runs-on: ubuntu-latest
-    
-    env:
-      OGRE: I'm Ogre
 
     steps:
-      - name: Who are you? 
-        env:
-          WITCH: I'm Witch
-        run: |
-          echo "DRAGON=$DRAGON"
-          echo "OGRE = ${{ env.OGRE }}"
-          echo "WITCH=$WITCH"
+      - uses: ./.github/actions/UseEnvJob
+        with:
+          witch: "魔法使いです"
+    
+    
