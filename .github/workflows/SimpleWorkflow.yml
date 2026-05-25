@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ./.github/actions/UseEnvJob
+      - uses: ./.github/actions/useEnvJob
         with:
           witch: "魔法使いです"
     
