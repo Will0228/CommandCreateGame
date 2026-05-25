@@ -15,21 +15,14 @@ on:
           - Release
     
 jobs:
-  # 自作アクションと定義済みアクションテスト
-  CreateActionJob:
+  Example:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+      # 自作アクションと定義済みアクションテスト
       - uses: ./.github/actions/sample
-
-  # 変数を使用する
-  UseEnvJob:
-    runs-on: ubuntu-latest
-
-    steps:
+      # 変数を使用する
       - uses: ./.github/actions/useEnvJob
         with:
-          witch: "魔法使いです"
-    
-    
+          witch: "魔法使いです"   
