@@ -16,6 +16,7 @@ runs:
 
   steps:
     - name: Who are you? 
+    　shell: bash
       env:
         WITCH: ${{ inputs.witch }}
       run: |
