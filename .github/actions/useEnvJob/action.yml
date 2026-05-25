@@ -6,19 +6,18 @@ inputs:
   witch:
     description: 'Witchのセリフ'
     required: false
-    default: "I'm Witch"
+    default: "I'm Witch"    
 
 runs:
   using: "composite"
-  env:
-    DRAGON: I'm Dragon
-    OGRE: I'm Ogre
 
   steps:
     - name: Who are you? 
-    　shell: bash
+      shell: bash
       env:
         WITCH: ${{ inputs.witch }}
+        DRAGON: I'm Dragon
+        OGRE: I'm Ogre
       run: |
         echo "DRAGON=$DRAGON"
         echo "OGRE = ${{ env.OGRE }}"
