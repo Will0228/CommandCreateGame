@@ -34,7 +34,7 @@ jobs:
       OGRE: I'm Ogre
 
     steps:
-      - name: Who are you?concurrency: 
+      - name: Who are you? 
         env:
           WITCH: I'm Witch
         run: |
