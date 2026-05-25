@@ -21,3 +21,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/sample
+
+# 変数を使用する
+env:
+  DRAGON: I'm Dragon
+
+jobs:
+  Example1:
+    runs-on: ubuntu-latest
+    
+    env:
+      OGRE: I'm Ogre
+
+    steps:
+      - name: Who are you?concurrency: 
+        env:
+          WITCH: I'm Witch
+        run: |
+          echo "DRAGON=$DRAGON"
+          echo "OGRE = ${{ env.OGRE }}"
+          echo "WITCH=$WITCH"
