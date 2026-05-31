@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Presentation.DemoViewTest
 {
     [CustomEditor(typeof(DemoViewBase), true)]
-    internal partial class DemoViewBaseEditor : Editor
+    internal partial class DemoViewBaseEditor : UnityEditor.Editor
     {
         private DemoViewBase _target;
         private readonly HashSet<string> _serializedPropertyNames = new();
@@ -49,6 +49,11 @@ namespace Presentation.DemoViewTest
                     param = new SpriteParameter();
                     param.Initialize(parameter.Name, null);
                 }
+                else if(parameter.ParameterType == typeof(AudioClip))
+                {
+                    param = new AudioParameter();
+                    param.Initialize(parameter.Name, null);
+                }
                 _cachedParameters.Add(param);
             }
         }
@@ -81,6 +86,14 @@ namespace Presentation.DemoViewTest
             {
                 var newValue = (Sprite)EditorGUILayout.ObjectField(parameter.ParameterName, spriteParameter.Value, typeof(Sprite), false);
                 if (newValue != spriteParameter.Value)
+                {
+                    parameter.SetField(AssetDatabase.GetAssetPath(newValue));
+                }
+            }
+            else if(parameter is AudioParameter audioParameter)
+            {
+                var newValue = (AudioClip)EditorGUILayout.ObjectField(parameter.ParameterName, audioParameter.Value, typeof(AudioClip), false);
+                if (newValue != audioParameter.Value)
                 {
                     parameter.SetField(AssetDatabase.GetAssetPath(newValue));
                 }
@@ -149,6 +162,10 @@ namespace Presentation.DemoViewTest
                         else if (_cachedParameters[i] is SpriteParameter spriteParameter)
                         {
                             parameterValues[i] = spriteParameter.Value;
+                        }
+                        else if (_cachedParameters[i] is AudioParameter audioParameter)
+                        {
+                            parameterValues[i] = audioParameter.Value;
                         }
                     }
 

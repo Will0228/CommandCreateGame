@@ -30,6 +30,46 @@ namespace Presentation.DemoViewTest
 
             void IGuiParameter.SetField(string value) => Value = int.Parse(value);
         }
+        
+        internal sealed class AudioParameter : IGuiParameter
+        {
+            public AudioClip Value { get; private set; }
+            
+            private string _parameterName;
+            string IGuiParameter.ParameterName => _parameterName;
+
+            void IGuiParameter.Initialize(string parameterName, string defaultValue)
+            {
+                _parameterName = parameterName;
+                ((IGuiParameter)this).SetField(defaultValue);
+            }
+
+            void IGuiParameter.SetField(string value)
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    Value = null;
+                    return;
+                }
+
+                // 1. もし送られてくる string が「GUID（一意の文字列）」の場合
+                string assetPath = AssetDatabase.GUIDToAssetPath(value);
+
+                // 2. もし送られてくる string が GUID ではなく直接の「パス（Assets/.../sound.wav）」だった場合のフォールバック
+                if (string.IsNullOrEmpty(assetPath))
+                {
+                    assetPath = value;
+                }
+
+                // 3. 確定したパスから AudioClip をロードして保持する
+                Value = AssetDatabase.LoadAssetAtPath<AudioClip>(assetPath);
+
+                if (Value == null)
+                {
+                    Debug.LogWarning($"[AudioParameter] オーディオアセットが見つかりませんでした: {value}");
+                }
+            }
+        }
 
         internal class SpriteParameter : IGuiParameter
         {

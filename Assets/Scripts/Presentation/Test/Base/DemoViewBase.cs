@@ -7,6 +7,5 @@ namespace Presentation.Test
     /// </summary>
     internal abstract class DemoViewBase : MonoBehaviour
     {
-        
     }
 }
