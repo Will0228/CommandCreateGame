@@ -1,18 +1,18 @@
+using Presentation.DemoViewTest;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Presentation.Test
 {
     internal sealed class TestDemoView : DemoViewBase
     {
-        [SerializeField] private int _testIntValue;
+        [SerializeField] private Image _testImage; 
         [SerializeField] private string _testStringValue;
         
-        [DemoSetup]
-        public void DemoSetup(int testIntValue, string testStringValue)
+        [DemoViewBaseEditor.DemoSetup]
+        private void DemoSetup(int testIntValue, Sprite testSprite)
         {
-            _testIntValue = testIntValue;
-            _testStringValue = testStringValue;
-            Debug.Log($"{_testIntValue} + {_testStringValue}");
+            _testImage.sprite = testSprite;
         }
     }
 }
