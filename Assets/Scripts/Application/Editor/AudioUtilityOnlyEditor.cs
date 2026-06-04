@@ -9,6 +9,11 @@ namespace Editor.Application
     {
         public static void PlayClip(AudioClip audioClip, int index = 0)
         {
+            if (audioClip == null)
+            {
+                return;
+            }
+            
             var audioUtil = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.AudioUtil");
             var playClipMethod = audioUtil.GetMethod(
                 "PlayPreviewClip",

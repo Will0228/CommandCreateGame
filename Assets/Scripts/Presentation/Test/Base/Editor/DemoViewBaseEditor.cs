@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Reflection;
-using Presentation.Test;
+using R3;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -11,57 +11,83 @@ using UnityEngine;
 namespace Presentation.DemoViewTest
 {
     [CustomEditor(typeof(DemoViewBase), true)]
-    internal partial class DemoViewBaseEditor : UnityEditor.Editor
+    internal sealed class DemoViewBaseEditor : UnityEditor.Editor
     {
+        internal enum ParameterType
+        {
+            None,
+            Common,
+            Animator
+        }
+        
         private DemoViewBase _target;
-        private readonly HashSet<string> _serializedPropertyNames = new();
-        private readonly List<IGuiParameter> _cachedParameters = new();
+        private DemoViewBaseEditorParameterStore _parameterStore;
+        private DemoViewBaseEditorDrawer _drawer;
+        private SerializedObject _serializedObject;
+        
+        private CompositeDisposable _disposables = new();
         
         public void Awake()
         {
             _target = (DemoViewBase)target;
+            _parameterStore = new DemoViewBaseEditorParameterStore();
+            _drawer = new DemoViewBaseEditorDrawer();
+            _serializedObject = new SerializedObject(_target);
             
-            var iterator = serializedObject.GetIterator();
-            var enterChildren = true;
-
-            while (iterator.NextVisible(enterChildren))
-            {
-                if(iterator.name == "m_Script")
-                {
-                    continue;
-                }
-                
-                _serializedPropertyNames.Add(iterator.name);
-                enterChildren = false;
-            }
-
-            var methodParameters = GetDemoSetupMethodParameters();
-            foreach (var parameter in methodParameters)
-            {
-                IGuiParameter param = null;
-                if(parameter.ParameterType == typeof(int))
-                {
-                    param = new IntParameter();
-                    param.Initialize(parameter.Name, "0");
-                }
-                else if(parameter.ParameterType == typeof(Sprite))
-                {
-                    param = new SpriteParameter();
-                    param.Initialize(parameter.Name, null);
-                }
-                else if(parameter.ParameterType == typeof(AudioClip))
-                {
-                    param = new AudioParameter();
-                    param.Initialize(parameter.Name, null);
-                }
-                _cachedParameters.Add(param);
-            }
+            _parameterStore.SetupCommonParameters(GetDemoSetupMethodParameters(ParameterType.Common));
+            _parameterStore.SetupAnimatorParameters(GetDemoSetupMethodParameters(ParameterType.Animator));
+            _drawer.Configure(_serializedObject);
+            
+            SetEvent();
         }
 
-        private MethodInfo GetDemoSetupMethod()
+        private void SetEvent()
+        {
+            // 通常のSetupメソッドを呼び出す場合
+            _drawer.OnExecuteMethodAsObservable
+                .Subscribe(_ =>
+                {
+                    var (demoSetupMethod, parameters)  = InjectVariables<DemoViewBaseEditorAttribute.DemoSetupAttribute, DemoViewBase>(_target);
+                    if (demoSetupMethod == null || parameters.Length == 0)
+                    {
+                        Debug.LogError("DemoViewBaseEditor: DemoSetup method is null");
+                        return;
+                    }
+                    
+                    var commonParameters = _parameterStore.CommonParameters;
+                    var parameterValues = new object[parameters.Length];
+                    for (int i = 0; i < commonParameters.Count; i++)
+                    {
+                        if (commonParameters[i] is DemoViewBaseEditorParameterDefinition.IntParameter integerParameter)
+                        {
+                            parameterValues[i] = integerParameter.Value;
+                        }
+                        else if (commonParameters[i] is DemoViewBaseEditorParameterDefinition.SpriteParameter spriteParameter)
+                        {
+                            parameterValues[i] = spriteParameter.Value;
+                        }
+                        else if (commonParameters[i] is DemoViewBaseEditorParameterDefinition.AudioParameter audioParameter)
+                        {
+                            parameterValues[i] = audioParameter.Value;
+                        }
+                    }
+                    
+                    MethodInvoke(demoSetupMethod, parameterValues);
+                })
+                .AddTo(_disposables);
+        }
+
+        public void OnDisable()
+        {
+            _parameterStore.Dispose();
+            _disposables.Dispose();
+        }
+
+        private MethodInfo GetDemoSetupMethod<TAttribute>()
+            where TAttribute : Attribute
         {
             var method = _target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .FirstOrDefault(m => m.GetCustomAttribute<DemoSetupAttribute>() != null);
+                .FirstOrDefault(m => m.GetCustomAttribute<TAttribute>() != null);
             if (method == null)
             {
                 Debug.LogError("DemoSetupAttributeをつけたメソッドが存在しません");
@@ -70,113 +96,54 @@ namespace Presentation.DemoViewTest
             return method;
         }
         
-        private ParameterInfo[] GetDemoSetupMethodParameters() => GetDemoSetupMethod().GetParameters();
-
-        private void CreateField(IGuiParameter parameter)
+        private ParameterInfo[] GetDemoSetupMethodParameters(ParameterType type)
         {
-            if (parameter is IntParameter intParameter)
+            return type switch
             {
-                var newValue = EditorGUILayout.IntField(parameter.ParameterName, intParameter.Value);
-                if (newValue != intParameter.Value)
-                {
-                    parameter.SetField(newValue.ToString());
-                }
-            }
-            else if(parameter is SpriteParameter spriteParameter)
-            {
-                var newValue = (Sprite)EditorGUILayout.ObjectField(parameter.ParameterName, spriteParameter.Value, typeof(Sprite), false);
-                if (newValue != spriteParameter.Value)
-                {
-                    parameter.SetField(AssetDatabase.GetAssetPath(newValue));
-                }
-            }
-            else if(parameter is AudioParameter audioParameter)
-            {
-                var newValue = (AudioClip)EditorGUILayout.ObjectField(parameter.ParameterName, audioParameter.Value, typeof(AudioClip), false);
-                if (newValue != audioParameter.Value)
-                {
-                    parameter.SetField(AssetDatabase.GetAssetPath(newValue));
-                }
-            }
+                ParameterType.None => Array.Empty<ParameterInfo>(),
+                ParameterType.Common => GetDemoSetupMethod<DemoViewBaseEditorAttribute.DemoSetupAttribute>().GetParameters(),
+                ParameterType.Animator => GetDemoSetupMethod<DemoViewBaseEditorAttribute.DemoAnimatorSetupAttribute>().GetParameters()
+            };
         }
 
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            
-            EditorGUILayout.Space();
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            _drawer.OnInspectorGUI(_parameterStore.CommonParameters, _parameterStore.AnimatorParameters);
+        }
+
+        // 派生クラスで使用するメソッドに変数を注入するためのメソッド
+        protected (MethodInfo? methodInfo, ParameterInfo[] parameterInfos) InjectVariables<TAttribute, TDemoViewBase>(TDemoViewBase target)
+            where TAttribute : Attribute
+            where TDemoViewBase : DemoViewBase
+        {
+            var demoSetupMethod = target.GetType()
+                .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .FirstOrDefault(m => m.GetCustomAttribute<TAttribute>() != null);
+
+            if (demoSetupMethod == null)
             {
-                EditorGUILayout.LabelField("Demo SetUp", EditorStyles.boldLabel);
-                    
-                serializedObject.Update();
-                
-                var iterator = serializedObject.GetIterator();
-                var enterChildren = true;
-
-                while (iterator.NextVisible(enterChildren))
-                {
-                    if(iterator.name == "m_Script")
-                    {
-                        continue;
-                    }
-                    
-                    
-                    // EditorGUILayout.PropertyField(iterator, true);
-                    enterChildren = false;
-                }
-                
-                // var tests = GetDemoSetupMethodParameters();
-                foreach (var parameter in _cachedParameters)
-                {
-                    CreateField(parameter);
-                }
-                
-                EditorGUILayout.Space();
-
-                if (GUILayout.Button("Invoke"))
-                {
-                    var demoSetupMethod = _target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                        .FirstOrDefault(m => m.GetCustomAttribute<DemoSetupAttribute>() != null);
-
-                    if (demoSetupMethod == null)
-                    {
-                        Debug.LogError("DemoSetupAttributeが付与されたメソッドが見つかりませんでした。");
-                        return;
-                    }
-                    
-                    var parameters = demoSetupMethod.GetParameters();
-                    if (parameters.Length == 0)
-                    {
-                        Debug.LogError("引数がないためデモのチェックができません");
-                        return;
-                    }
-                    
-                    var parameterValues = new object[parameters.Length];
-                    for (int i = 0; i < _cachedParameters.Count; i++)
-                    {
-                        if (_cachedParameters[i] is IntParameter integerParameter)
-                        {
-                            parameterValues[i] = integerParameter.Value;
-                        }
-                        else if (_cachedParameters[i] is SpriteParameter spriteParameter)
-                        {
-                            parameterValues[i] = spriteParameter.Value;
-                        }
-                        else if (_cachedParameters[i] is AudioParameter audioParameter)
-                        {
-                            parameterValues[i] = audioParameter.Value;
-                        }
-                    }
-
-                    demoSetupMethod.Invoke(_target, parameterValues);
-                    EditorUtility.SetDirty(_target);
-                    InternalEditorUtility.RepaintAllViews();
-                }
-                
-                serializedObject.ApplyModifiedProperties();
+                Debug.LogError("DemoSetupAttributeが付与されたメソッドが見つかりませんでした。");
+                return (null,  null);
             }
-            EditorGUILayout.EndVertical();
+
+            var parameters = demoSetupMethod.GetParameters();
+            if (parameters.Length == 0)
+            {
+                Debug.LogError("引数がないためデモのチェックができません");
+                return (null, null);
+            }
+            return (demoSetupMethod, parameters);
+        }
+
+        /// <summary>
+        /// 派生クラスのメソッド呼び出し
+        /// </summary>
+        protected void MethodInvoke(MethodInfo methodInfo, object[] methodParameters)
+        {
+            methodInfo.Invoke(_target, methodParameters);
+            EditorUtility.SetDirty(_target);
+            InternalEditorUtility.RepaintAllViews();
         }
     }
 }

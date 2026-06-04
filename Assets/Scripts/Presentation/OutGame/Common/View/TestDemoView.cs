@@ -1,9 +1,6 @@
-using System;
-using System.Reflection;
-using Editor;
 using Editor.Application;
 using Presentation.DemoViewTest;
-using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,13 +10,20 @@ namespace Presentation.Test
     {
         [SerializeField] private Image _testImage; 
         [SerializeField] private string _testStringValue;
+        [SerializeField] private Button _testButton;
         
 #if UNITY_EDITOR
-        [DemoViewBaseEditor.DemoSetup]
+        [DemoViewBaseEditorAttribute.DemoSetup]
         private void DemoSetup(int testIntValue, Sprite testSprite, AudioClip testAudioClip)
         {
             _testImage.sprite = testSprite;
             AudioUtilityOnlyEditor.PlayClip(testAudioClip);
+        }
+        
+        [DemoViewBaseEditorAttribute.DemoAnimatorSetup]
+        private void SetupDemoButtonView(AnimatorController animatorController)
+        {
+            throw new System.NotImplementedException();
         }
 #endif
     }

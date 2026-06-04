@@ -1,11 +1,12 @@
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 #if UNITY_EDITOR
 
 namespace Presentation.DemoViewTest
 {
-    internal partial class DemoViewBaseEditor
+    internal sealed class DemoViewBaseEditorParameterDefinition
     {
         internal interface IGuiParameter
         {
@@ -31,6 +32,34 @@ namespace Presentation.DemoViewTest
             void IGuiParameter.SetField(string value) => Value = int.Parse(value);
         }
         
+        internal sealed class AnimatorParameter : IGuiParameter
+        {
+            public AnimatorController Value { get; private set; }
+            
+            private string _parameterName;
+            string IGuiParameter.ParameterName => _parameterName;
+
+            void IGuiParameter.Initialize(string parameterName, string defaultValue)
+            {
+                _parameterName = parameterName;
+                ((IGuiParameter)this).SetField(defaultValue);
+            }
+
+            void IGuiParameter.SetField(string value)
+            {
+                var guids = AssetDatabase.FindAssets($"{value} t:AnimatorController");
+                if (guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    Value = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+                }
+                else
+                {
+                    Debug.LogError($"AnimatorController parameter {value} not found");
+                }
+            }
+        }
+
         internal sealed class AudioParameter : IGuiParameter
         {
             public AudioClip Value { get; private set; }

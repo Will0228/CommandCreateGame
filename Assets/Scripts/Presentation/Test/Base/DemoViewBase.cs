@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Presentation.Test
+namespace Presentation.DemoViewTest
 {
     /// <summary>
     /// Viewのテストを行うための基底クラス
