@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -11,15 +14,15 @@ namespace Presentation.DemoViewTest
         internal interface IGuiParameter
         {
             public string ParameterName { get; }
-            
+
             void Initialize(string parameterName, string defaultValue);
             void SetField(string value);
         }
-        
+
         internal sealed class IntParameter : IGuiParameter
         {
             public int Value { get; private set; }
-            
+
             private string _parameterName;
             string IGuiParameter.ParameterName => _parameterName;
 
@@ -31,31 +34,111 @@ namespace Presentation.DemoViewTest
 
             void IGuiParameter.SetField(string value) => Value = int.Parse(value);
         }
-        
+
         internal sealed class AnimatorParameter : IGuiParameter
         {
-            public AnimatorController Value { get; private set; }
-            
+            internal const string ANIMATOR_CONTROLLER_TAG = "AnimatorController";
+            internal const string ANIMATION_CLIP_TAG = "AnimationClip";
+
+            private string _animatorControllerPath;
+            public AnimatorController AnimatorControllerValue { get; private set; }
+            public readonly List<AnimationClip> AnimationClipValues = new();
+
             private string _parameterName;
             string IGuiParameter.ParameterName => _parameterName;
 
             void IGuiParameter.Initialize(string parameterName, string defaultValue)
             {
                 _parameterName = parameterName;
-                ((IGuiParameter)this).SetField(defaultValue);
+                ((IGuiParameter)this).SetField($"{ANIMATOR_CONTROLLER_TAG}\\{defaultValue}");
             }
 
+            // valueには '\\' で異なる中身が渡される
+            // 0番目にはAnimatorControllerかAnimationClipが渡される
+            // 1番目に該当のkeyが渡される
+            // 2番目はAnimationClipの場合のみ入り、何番目のStateを変更するか選べる
             void IGuiParameter.SetField(string value)
             {
-                var guids = AssetDatabase.FindAssets($"{value} t:AnimatorController");
-                if (guids.Length > 0)
+                var splitResults = value.Split('\\');
+                if (splitResults[0] == ANIMATOR_CONTROLLER_TAG)
                 {
-                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                    Value = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+                    var guids = AssetDatabase.FindAssets($"{Path.GetFileNameWithoutExtension(splitResults[1])} t:AnimatorController");
+                    if (guids.Length > 0)
+                    {
+                        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                        if (_animatorControllerPath == path)
+                        {
+                            return;
+                        }
+
+                        _animatorControllerPath = path;
+                        AnimationClipValues.Clear();
+                        AnimatorControllerValue = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+
+                        foreach (var layer in AnimatorControllerValue.layers)
+                        {
+                            var stateMachine = layer.stateMachine;
+                            DumpStateMachine(stateMachine);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError($"AnimatorController parameter {value} not found");
+                    }
+                }
+                else if (splitResults[0] == ANIMATION_CLIP_TAG)
+                {
+                    var guids = AssetDatabase.FindAssets($"{splitResults[1]} t:AnimationClip");
+                    foreach (var guid in guids)
+                    {
+                        var path = AssetDatabase.GUIDToAssetPath(guid);
+
+                        if (path.EndsWith(".controller", System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            var targetClip = AssetDatabase.LoadAllAssetsAtPath(path)
+                                .Where(asset => asset is AnimationClip)
+                                .FirstOrDefault(clip => clip.name == splitResults[1]);
+                            if (targetClip != null)
+                            {
+                                AnimationClipValues[int.Parse(splitResults[2])] = targetClip as AnimationClip;
+                                break;
+                            }
+                        }
+                        else if (path.EndsWith(".anim", System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+                            AnimationClipValues[int.Parse(splitResults[2])] = clip;
+                            break;
+                        }
+                    }
                 }
                 else
                 {
-                    Debug.LogError($"AnimatorController parameter {value} not found");
+                    Debug.LogError("想定していないタグが\\で区切られたテキストの0番目に入っています");
+                }
+            }
+
+            void DumpStateMachine(AnimatorStateMachine stateMachine)
+            {
+                foreach (var childState in stateMachine.states)
+                {
+                    var state = childState.state;
+
+                    if (state.motion != null)
+                    {
+                        if (state.motion is AnimationClip animationClip)
+                        {
+                            AnimationClipValues.Add(animationClip);
+                        }
+                        // else if(state.motion is BlendTree)
+                    }
+
+                    foreach (var transition in state.transitions)
+                    {
+                        var destinationState = transition.isExit ? "Exit" :
+                            (transition.destinationState != null ? transition.destinationState.name : "SubStateMachine");
+                        Debug.Log($"遷移先 : {destinationState}");
+                    }
                 }
             }
         }
@@ -63,7 +146,7 @@ namespace Presentation.DemoViewTest
         internal sealed class AudioParameter : IGuiParameter
         {
             public AudioClip Value { get; private set; }
-            
+
             private string _parameterName;
             string IGuiParameter.ParameterName => _parameterName;
 
@@ -126,7 +209,7 @@ namespace Presentation.DemoViewTest
                 // もし入力された文字列がGUIDではなく直接の「パス」だった場合のフォールバック
                 if (string.IsNullOrEmpty(assetPath))
                 {
-                    assetPath = value; 
+                    assetPath = value;
                 }
 
                 // 2. パスからSpriteとしてアセットをロードして保持
